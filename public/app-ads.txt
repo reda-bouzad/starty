@@ -1,0 +1,1 @@
+https://starty-6bf4d.firebaseapp.com/__/auth/handler
