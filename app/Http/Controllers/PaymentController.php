@@ -174,7 +174,7 @@ class PaymentController extends Controller
                 "payment_processing" => true]);
         }
 
-        return response()->json(["url" => $res->json('checkout_url')]);
+        return response()->json(["public_id" => $res->json('public_id')]);
 
     }
 
