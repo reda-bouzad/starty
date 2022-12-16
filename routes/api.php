@@ -48,7 +48,7 @@ Route::delete('/account/delete', [AuthController::class, 'deleteAccount'])->midd
 Route::group(['middleware' => ['auth:sanctum', 'languable']], function () {
     Route::post('/verification/send', [AuthController::class, 'sendEmailCode']);
     Route::post('/verification/verify', [AuthController::class, 'verifyCode']);
-    Route::get('/stripe-status', [AuthController::class, 'stripeAccountStatus']);
+   // Route::get('/stripe-status', [AuthController::class, 'stripeAccountStatus']);
     //Evènement
 
     Route::post('/create-event', [EventController::class, 'createEvent']);
@@ -138,15 +138,15 @@ Route::group(['middleware' => ['auth:sanctum', 'languable']], function () {
     Route::get('reports', [ReportController::class, 'lists']);
 
     //payments
-    Route::get('payments/{event}/intent', [PaymentController::class, 'getPaymentIntent']);
+   // Route::get('payments/{event}/intent', [PaymentController::class, 'getPaymentIntent']);
 
-    Route::get('payments/account-link', [PaymentController::class, 'accountLink']);
-    Route::get('payments/dashboard-link', [PaymentController::class, 'dashboardAccountLink']);
+  //  Route::get('payments/account-link', [PaymentController::class, 'accountLink']);
+  //  Route::get('payments/dashboard-link', [PaymentController::class, 'dashboardAccountLink']);
     Route::get('payments/{event}/checkout-link', [PaymentController::class, 'paymentLink']);
     Route::get('payments/{event}/status', [PaymentController::class, 'paymentStatus']);
 
 });
-Route::get('payments/account-link/refresh', [PaymentController::class, 'refreshAccountLink'])->name('stripe-refresh');
+//Route::get('payments/account-link/refresh', [PaymentController::class, 'refreshAccountLink'])->name('stripe-refresh');
 Route::get('app-config', [AppConfigController::class, 'appConfig']);
-Route::post('stripe/general-callback', [PaymentController::class, 'paymentCallback']);
+//Route::post('stripe/general-callback', [PaymentController::class, 'paymentCallback']);
 Route::any('webhook', [PaymentController::class, 'webhook']);

@@ -234,7 +234,6 @@ class PaymentController extends Controller
 
     public function webhook(Request $request)
     {
-
         switch ($request->get('event')) {
             case "ORDER_COMPLETED":
             {
