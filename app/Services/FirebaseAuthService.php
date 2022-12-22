@@ -18,15 +18,22 @@ class FirebaseAuthService
         $uid = $verifiedIdToken->claims()->get('sub');
 
         $data = $auth->getUser($uid);
+
         $unique = [];
         $params =[
         "firebase_uuid" => $data->uid
     ];
-        if($data->email){
-            $unique["email"] = $data->email;
-        }
         if($data->phoneNumber){
             $unique['phone_number'] = $data->phoneNumber;
+        }
+        if($data->email){
+            $unique["email"] = $data->email ;
+        }
+
+        if(count($unique) === 0){
+            $unique = [
+                "email" => $data->uid."@private.com"
+            ];
         }
         return User::withoutGlobalScopes()->updateOrCreate($unique, $params);
 

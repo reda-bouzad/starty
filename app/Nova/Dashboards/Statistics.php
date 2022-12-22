@@ -2,8 +2,6 @@
 
 namespace App\Nova\Dashboards;
 
-use App\Nova\Metrics\NbUsers;
-use App\Nova\Metrics\UserTypes;
 use Laravel\Nova\Dashboard;
 
 class Statistics extends Dashboard
@@ -13,7 +11,7 @@ class Statistics extends Dashboard
      *
      * @return array
      */
-    public function cards()
+    public function cards(): array
     {
         return [
             //
@@ -25,12 +23,12 @@ class Statistics extends Dashboard
      *
      * @return string
      */
-    public function uriKey()
+    public function uriKey(): string
     {
         return 'statistics';
     }
 
-    public function name()
+    public function name(): string
     {
         return 'Tableau de bord';
     }

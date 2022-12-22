@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\NotificationResource;
+use Auth;
 use Illuminate\Http\Request;
-use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NotificationController extends Controller
 {
-    public function getNotifications(Request $request) {
-         $user = \Auth::user();
+    public function getNotifications(Request $request): AnonymousResourceCollection
+    {
+         $user = Auth::user();
         $notifications = $user->notifications()
             ->orderBy('read_at')
             ->latest()
@@ -20,19 +22,19 @@ class NotificationController extends Controller
     }
 
     public function markAllAsRead(){
-        \Auth::user()->notifications()->update([
+        Auth::user()->notifications()->update([
             "read_at"  => now()
         ]);
     }
 
     public function markAsRead($notification_id){
-        \Auth::user()->notifications()
+        Auth::user()->notifications()
             ->where('id',$notification_id)
             ->whereNull('read_at')
             ->update(["read_at" => now()]);
     }
 
     public function deleteNotification($notification_id){
-        \Auth::user()->notifications()->where('id',$notification_id)->delete();
+        Auth::user()->notifications()->where('id',$notification_id)->delete();
     }
 }

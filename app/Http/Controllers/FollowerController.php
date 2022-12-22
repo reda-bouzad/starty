@@ -11,15 +11,18 @@ use App\Models\ModelReport;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\SpatialBuilder;
 
 class FollowerController extends Controller
 {
 
-        public function getUserFollowers(Request $request, User $user){
+        public function getUserFollowers(Request $request, User $user): AnonymousResourceCollection
+        {
              return  UserResource::collection($user
                  ->followers()
                  ->orderBy('lastname')
@@ -27,7 +30,8 @@ class FollowerController extends Controller
                  ->paginate($request->input('per_page',30)));
         }
 
-        public function toggleFollow(User $user){
+        public function toggleFollow(User $user): array
+        {
             if(Follow::query()->where('user_id',$user->id)->where('follower_id',Auth::id())->exists()){
                 $user->followers()->detach(\Auth::id());
                 return [
@@ -48,7 +52,8 @@ class FollowerController extends Controller
 
         }
 
-        public function users(Request $request){
+        public function users(Request $request): AnonymousResourceCollection
+        {
 
             $query =  User::query()
                 ->regular()
@@ -74,14 +79,16 @@ class FollowerController extends Controller
             return UserResource::collection($users);
         }
 
-        public function details( int $user){
+        public function details( int $user): UserResource
+        {
            $user = User::withCount(['followers','follows'])
                ->where('id',$user)
                ->first();
            return new UserResource($user);
         }
 
-        public function userParties(Request $request, int $user){
+        public function userParties(Request $request, int $user): AnonymousResourceCollection
+        {
             $events = Party::query()
                 ->orderByDesc('created_at')
                 ->withCount('participants')
@@ -104,7 +111,9 @@ class FollowerController extends Controller
         }
 
 
-
+    /**
+     * @throws ValidationException
+     */
     public function report(Request $request, User $user) {
 
         $this->validate($request,[
@@ -120,11 +129,9 @@ class FollowerController extends Controller
 
     }
 
-    public function toggleBlock(Request $request,  $user){
+    public function toggleBlock($user): array
+    {
         $user = User::withoutGlobalScopes()->find($user);
-//        if($user->id === Auth::id()){
-//            return response()->json(["message" => "impossible de se blocker "],401);
-//        }
 
             if(collect($user->blocked_by ?? [])->contains(Auth::id())){
                 $user->blocked_by = collect($user->blocked_by)->reject(fn($el) => $el === Auth::id())->values()->all();
@@ -147,13 +154,15 @@ class FollowerController extends Controller
     }
 
 
-    public function blocked(Request $request, User $user){
+    public function blocked(Request $request, User $user): AnonymousResourceCollection
+    {
             $per_page = $request->input('per_page',20);
             $user = User::select(['id','firstname','lastname'])->whereIn('id',$user->blocked_user ?? [])->paginate($per_page);
             return UserResource::collection($user);
     }
 
-    public function followers(Request $request, User $user){
+    public function followers(Request $request, User $user): AnonymousResourceCollection
+    {
             $per_page = $request->input('per_page',20);
             $followers =   $user->followers()
                 ->withCount('followers','follows')
@@ -161,7 +170,8 @@ class FollowerController extends Controller
 
             return UserResource::collection($followers);
     }
-    public function follows(Request $request, User $user){
+    public function follows(Request $request, User $user): AnonymousResourceCollection
+    {
             $per_page = $request->input('per_page',20);
             $followers =   $user->follows()
                 ->withCount('followers','follows')
@@ -169,7 +179,8 @@ class FollowerController extends Controller
             return UserResource::collection($followers);
     }
 
-    public function networks(Request $request, User $user){
+    public function networks(Request $request, User $user): AnonymousResourceCollection
+    {
             $networks = User::query()
                 ->withCount(['followers','follows'])
                 ->where(function($query) use($user){

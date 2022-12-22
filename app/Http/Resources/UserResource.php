@@ -30,8 +30,17 @@ class UserResource extends JsonResource
             "birth_date" => $this->birth_date,
             "is_verified" => $this->is_verified,
             "follows" =>  UserResource::collection($this->whenLoaded('follows')),
+            "follow_ids" => $this->whenLoaded('follows',function(){
+                return $this->followers->map->id;
+            }),
             "followers" =>  UserResource::collection($this->whenLoaded('followers')),
+            "followers_ids" => $this->whenLoaded('followers',function(){
+                return $this->followers->map->id;
+            }),
             "like_events" =>  EventResource::collection($this->whenLoaded('likeEvents')),
+            "like_eventts_ids" => $this->whenLoaded('likeEvents',function(){
+                return $this->likeEvents->map->id;
+            }),
             "joint_events" => EventResource::collection( $this->whenLoaded('jointEvents')),
             "events" =>  EventResource::collection($this->whenLoaded('events')),
             "followers_count" => $this->followers_count,

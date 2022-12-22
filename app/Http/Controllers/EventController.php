@@ -8,35 +8,39 @@ use App\Http\Resources\EventResource;
 use App\Http\Resources\UserResource;
 use App\Models\AppConfig;
 use App\Models\ChatUser;
-use App\Models\Party;
 use App\Models\EventParticipant;
+use App\Models\ModelReport;
+use App\Models\Party;
 use App\Models\User;
 use App\Notifications\AcceptedRequestEventNotification;
 use App\Notifications\CancelEventNotification;
 use App\Notifications\JoinEventNotification;
 use App\Notifications\NewEventNotification;
 use App\Notifications\RejectedEventNotification;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\RequiredIf;
 use Illuminate\Validation\ValidationException;
 use Laravel\Cashier\Cashier;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\SpatialBuilder;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Spatie\MediaLibrary\MediaCollections\FileAdder;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use App\Models\ModelReport;
+use Stripe\Exception\ApiErrorException;
 
 class EventController extends Controller
 {
-    public function createEvent(EventRequest $eventRequest)
+    public function createEvent(EventRequest $eventRequest): JsonResponse
     {
         $data = $eventRequest->except(['lat', 'long']);
         $data = array_merge($data, [
@@ -65,14 +69,16 @@ class EventController extends Controller
         Notification::send($users, (new NewEventNotification($event))->delay(now()->addMinutes(10)));
 
 
-        return response()->json(new EventResource($event), 200);
+
+
+        return response()->json(new EventResource($event));
     }
 
-    public function addImagesToEvent(Party $event, Request $request)
+    public function addImagesToEvent(Party $event, Request $request): JsonResponse
     {
 
         if ($request->hasFile('images')) {
-            $fileAdders = $event->addMultipleMediaFromRequest(['images'])
+            $event->addMultipleMediaFromRequest(['images'])
                 ->each(function ($fileAdder, $key) {
                     $fileAdder->toMediaCollection('image')
                         ->withCustomProperties([
@@ -81,10 +87,15 @@ class EventController extends Controller
                 });
         }
 
-        return response()->json($event, 200);
+        return response()->json($event);
     }
 
-    public function addSingleImageToEvent(Party $event, Request $request)
+    /**
+     * @throws FileDoesNotExist
+     * @throws FileIsTooBig
+     * @throws ValidationException
+     */
+    public function addSingleImageToEvent(Party $event, Request $request): JsonResponse
     {
         $this->validate($request, [
             "image" => "required|image",
@@ -106,22 +117,24 @@ class EventController extends Controller
         }
 
         $event->append('images');
-        return response()->json(new EventResource($event), 200);
+        return response()->json(new EventResource($event));
     }
 
-    public function getEvent(Party $event)
+    public function getEvent(Party $event): JsonResponse
     {
         $event->append('images', 'qr_code');
         $event->load('user', 'eventChat.members:id,firstname,lastname');
         $event->loadCount(['participants', 'acceptedParticipants', 'requestedParticipants']);
-        $event->load(['participants' => function ($query) {
-            $query->select('users.id');
-        }]);
+        $event->load([
+            'participants' => function ($query) {
+                $query->select('users.id');
+            }
+        ]);
 
         return response()->json(new EventResource($event));
     }
 
-    public function updateEvent(Party $event, Request $request)
+    public function updateEvent(Party $event, Request $request): JsonResponse
     {
 
         $event->update([
@@ -142,16 +155,19 @@ class EventController extends Controller
         ]);
 
         if ($request->hasFile('images')) {
-            $fileAdders = $event->addMultipleMediaFromRequest(['images'])
+            $event->addMultipleMediaFromRequest(['images'])
                 ->each(function ($fileAdder) {
                     $fileAdder->toMediaCollection('image');
                 });
         }
 
-        return response()->json(new EventResource($event), 200);
+        return response()->json(new EventResource($event));
     }
 
-    public function deleteEvent(Party $event)
+    /**
+     * @throws ApiErrorException
+     */
+    public function deleteEvent(Party $event): JsonResponse
     {
         $chat = $event->eventChat;
         if ($event->pricy) {
@@ -171,7 +187,10 @@ class EventController extends Controller
         ]);
     }
 
-    public function myParties(Request $request)
+    /**
+     * @throws ValidationException
+     */
+    public function myParties(Request $request): AnonymousResourceCollection
     {
         //all, organise, attend
         $this->validate($request, [
@@ -188,19 +207,35 @@ class EventController extends Controller
             ->orderByDesc('start_at')
             ->withCount(['participants', 'acceptedParticipants'])
             ->where(function ($query) use ($request) {
-                $query->when($request->organise, function (Builder $query) use ($request) {
-                    return $query->where('user_id', $request->organise === "1" ? "=" : "!=", Auth::id());
-                })
-                    ->when($request->attend, function (Builder $query) use ($request) {
-                        return $query->orWhereHas('acceptedParticipants', function ($query) use ($request) {
-                            return $query->where('users.id', $request->attend === "1" ? "=" : "!=", Auth::id());
-                        });
-                    })->when($request->attended, function ($query) use ($request) {
-                        return $query->orWhereHas('scannedParticipants', function (Builder $query) use ($request) {
-                            return $query->where('users.id', $request->attended === "1" ? "=" : "!=", Auth::id());
-                        });
-                    });
+                $query->when(
+                    $request->organise,
+                    function (Builder $query) use ($request) {
+                            return $query->where('user_id', $request->organise === "1" ? "=" : "!=", Auth::id());
+                        }
+                )
+                    ->when(
+                        $request->attend,
+                        function (Builder $query) use ($request) {
+                                return $query->orWhereHas(
+                                    'acceptedParticipants',
+                                    function ($query) use ($request) {
+                                                        return $query->where('users.id', $request->attend === "1" ? "=" : "!=", Auth::id());
+                                                    }
+                                );
+                            }
+                    )->when(
+                        $request->attended,
+                        function ($query) use ($request) {
+                                return $query->orWhereHas(
+                                    'scannedParticipants',
+                                    function (Builder $query) use ($request) {
+                                                        return $query->where('users.id', $request->attended === "1" ? "=" : "!=", Auth::id());
+                                                    }
+                                );
+                            }
+                    );
             })
+
             ->when($request->start, function (Builder $query) use ($request) {
                 return $query->where('start_at', '>=', $request->start);
             })
@@ -213,18 +248,18 @@ class EventController extends Controller
             ->when($request->type, function ($query) use ($request) {
                 return $query->where('type', $request->type);
             })->when($request->lat && $request->long && $request->radius, function (SpatialBuilder $query) use ($request) {
-                $center = new Point($request->get('lat', 0.0), $request->get('long', 0.0));
-                return $query->whereDistanceSphere('location', $center, '<=', $request->radius)
-                    ->withDistanceSphere('location', $center)
-                    ->orderByDistanceSphere('location', $center);
-            })
+            $center = new Point($request->get('lat', 0.0), $request->get('long', 0.0));
+            return $query->whereDistanceSphere('location', $center, '<=', $request->radius)
+                ->withDistanceSphere('location', $center)
+                ->orderByDistanceSphere('location', $center);
+        })
             ->paginate($request->input('per_page', 20));
 
 
         return EventResource::collection($data);
     }
 
-    public function getUpcomingEvents()
+    public function getUpcomingEvents(): AnonymousResourceCollection
     {
         $data = Party::whereBetween('start_at', [now(), now()->addDays(10)])
             ->paginate(20);
@@ -232,7 +267,7 @@ class EventController extends Controller
         return EventResource::collection($data);
     }
 
-    public function joinEvent(Request $request, Party $event)
+    public function joinEvent(Request $request, Party $event): JsonResponse
     {
         $request->validate([
             "payment_intent_id" => [
@@ -247,7 +282,7 @@ class EventController extends Controller
                 'message' => 'Evènement complet'
             ], 422);
         }
-//        if ($event->participants()->where('users.id',Auth::id())->exists()) {
+        //        if ($event->participants()->where('users.id',Auth::id())->exists()) {
 //            return response()->json([
 //                'message' => 'Existe déjà'
 //            ], 422);
@@ -258,7 +293,11 @@ class EventController extends Controller
             ], 422);
         }
 
-        $eventParticipant = EventParticipant::updateOrCreate([
+        EventParticipant::updateOrCreate([
+            "user_id" => \Auth::id(),
+            "event_id" => $event->id
+        ]);
+        $eventParticipant = EventParticipant::firstWhere([
             "user_id" => \Auth::id(),
             "event_id" => $event->id
         ]);
@@ -271,15 +310,19 @@ class EventController extends Controller
                 $intent->capture();
 
 
-            } catch (\Exception $e) {
+            } catch (Exception) {
                 return response()->json(["message" => "payment_failed"], 403);
             }
 
         }
-
+        Log::info('event_participant id :' . $eventParticipant->id);
+        Log::info('event type' . $event->type);
         EventParticipant::whereId($eventParticipant->id)->update(["payment_processing" => false, "accepted" => $event->type === "public", 'rejected' => false]);
         if ($event->chat_id && $event->type === "public" && !ChatUser::where('chat_id', $event->chat_id)->where('user_id', Auth::id())->exists()) {
-            ChatUser::whereId($eventParticipant->id)->update(["state" => "direct"]);
+            ChatUser::updateOrCreate([
+                "chat_id" => $event->chat_id,
+                "user_id" => Auth::id()
+            ], ["state" => "direct"]);
             $event->remaining_participants -= 1;
             $event->save();
         }
@@ -291,46 +334,21 @@ class EventController extends Controller
 
         return response()->json([
             'message' => $event->type === "private" ? 'requête envoyée avec succès' : 'Vous avez rejoins l\'évènement avec succès'
-        ], 200);
+        ]);
     }
 
-
-    public function cancelEvent(Party $event)
-    {
-        if (!$event->pricy) {
-            return response()->json(["message" => "this event is not paid"], 422);
-        }
-        $eventParty = EventParticipant::whereEventId($event->id)->whereUserId(Auth::id());
-        if ($eventParty->count() == 0) {
-            return response()->json(["message" => "not found"], 404);
-        }
-
-        error_log($eventParty->first()->payment_intent_id);
-
-        $res = Http::withToken(AppConfig::first()->revolut_pk)->
-        post(env('REVOLUT_BASE_URL') . '/orders/' . $eventParty->first()->payment_intent_id . '/cancel');
-
-        EventParticipant::whereEventId($event->id)->whereUserId(Auth::id())->delete();
-
-
-        return response()->json([
-            'message' => $event->type === "private" ? 'requête envoyée avec succès' : 'Vous avez rejoins l\'évènement avec succès'
-        ], $res->status());
-    }
-
-    public function deleteEventImage(Media $media)
+    public function deleteEventImage(Media $media): JsonResponse
     {
 
         $media->delete();
-        return response()->json(['message' => 'Image supprimée'], 200);
+        return response()->json(['message' => 'Image supprimée']);
     }
 
-    public function searchEvent(EventSearchRequest $request)
+    public function searchEvent(EventSearchRequest $request): AnonymousResourceCollection
     {
         $center = new Point($request->get('lat', 0.0), $request->get('long', 0.0));
         $start_at = explode(',', $request->input('start_at', ','));
         $end_at = explode(',', $request->input('end_at', ','));
-
         $data = Party::query()
             ->withCount(['participants', 'acceptedParticipants'])
             ->orderBy('start_at')
@@ -366,10 +384,12 @@ class EventController extends Controller
             ->when($request->search, function (Builder $query) use ($request) {
                 $lower = Str::lower($request->search);
                 $upper = Str::upper($request->search);
-                return $query->where(function ($query) use ($lower, $upper) {
-                    $query->where('label', 'like', "%$lower%")
-                        ->orWhere('label', 'like', "%$upper%");
-                });
+                return $query->where(
+                    function ($query) use ($lower, $upper) {
+                            $query->where('label', 'like', "%$lower%")
+                                ->orWhere('label', 'like', "%$upper%");
+                        }
+                );
             })
             ->paginate($request->input('per_page', 20));
 
@@ -377,7 +397,7 @@ class EventController extends Controller
         return EventResource::collection($data);
     }
 
-    public function toggleLikeEvent(Party $event)
+    public function toggleLikeEvent(Party $event): JsonResponse
     {
         if ($event->likes()->where('users.id', Auth::id())->exists()) {
             $event->likes()->detach(Auth::id());
@@ -389,7 +409,7 @@ class EventController extends Controller
     }
 
 
-    public function scannedQrcode(int $event, string $uuid)
+    public function scannedQrcode(int $event, string $uuid): JsonResponse
     {
         $event2 = Party::where('uuid', 'like', "$uuid%")
             ->whereHas('acceptedParticipants', function ($query) {
@@ -414,7 +434,7 @@ class EventController extends Controller
         ], 422);
     }
 
-    public function getMyFavoriteEvents()
+    public function getMyFavoriteEvents(): AnonymousResourceCollection
     {
         $events = Party::whereHas('likes', function ($query) {
             $query->where('users.id', Auth::id());
@@ -423,17 +443,18 @@ class EventController extends Controller
         return EventResource::collection($events);
     }
 
-    public function participants(Request $request, Party $event)
+    public function participants(Request $request, Party $event): AnonymousResourceCollection
     {
         $query = $request->only_accepted === true || $event->user_id !== Auth::id()
             ? $event->acceptedParticipants()
             : $event->participants();
         return UserResource::collection(
-            $query->paginate($request->input('per_page', 30)));
+            $query->paginate($request->input('per_page', 30))
+        );
     }
 
 
-    public function leaveTheEvent(Request $request, Party $event)
+    public function leaveTheEvent(Party $event): Response|JsonResponse
     {
         $event_participant = EventParticipant::where([
             "event_id" => $event->id,
@@ -454,16 +475,18 @@ class EventController extends Controller
         ChatUser::where('chat_id', $event->chat_id)->where('user_id', Auth::id())->delete();
         $event->remaining_participants += 1;
         $event->save();
+        return response()->noContent();
     }
 
-    public function acceptRequest(Party $event, int $user)
+    public function acceptRequest(Party $event, int $user): Response|JsonResponse
     {
-
-        if (!EventParticipant::where([
-            "event_id" => $event->id,
-            "user_id" => $user
-        ])->exists()) {
-            return;
+        if (
+            !EventParticipant::where([
+                "event_id" => $event->id,
+                "user_id" => $user
+            ])->exists()
+        ) {
+            return response()->noContent();
         }
         $event_participant = EventParticipant::where([
             "event_id" => $event->id,
@@ -473,7 +496,7 @@ class EventController extends Controller
 
         if ($event_participant->payment_intent_id) {
             $res = Http::withToken(AppConfig::first()->revolut_pk)->
-            post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $event->price]);
+                post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $event->price]);
             if (!$res->ok()) {
                 return response()->json(["message" => "payment_failed"], 403);
             }
@@ -494,15 +517,17 @@ class EventController extends Controller
             "user_id" => $user
         ]);
         User::find($user)->notify(new AcceptedRequestEventNotification($event));
+        return response()->noContent();
     }
-
-    public function rejectRequest(Party $event, int $user)
+    public function rejectRequest(Party $event, int $user): Response|JsonResponse
     {
-        if (!EventParticipant::where([
-            "event_id" => $event->id,
-            "user_id" => $user
-        ])->exists()) {
-            return;
+        if (
+            !EventParticipant::where([
+                "event_id" => $event->id,
+                "user_id" => $user
+            ])->exists()
+        ) {
+            return response()->noContent();
         }
         $event_participant = EventParticipant::where([
             "event_id" => $event->id,
@@ -536,9 +561,13 @@ class EventController extends Controller
         ])->delete();
 
         User::find($user)->notify(new RejectedEventNotification($event));
+        return response()->noContent();
     }
 
 
+    /**
+     * @throws ValidationException
+     */
     public function report(Request $request, Party $event)
     {
 
@@ -555,9 +584,9 @@ class EventController extends Controller
 
     }
 
-    public function toggleBlock(Request $request, $event)
+    public function toggleBlock(int $event_id): array|JsonResponse
     {
-        $event = Party::withoutGlobalScopes()->find($event);
+        $event = Party::withoutGlobalScopes()->find($event_id);
         if ($event->user_id === Auth::id()) {
             return response()->json(["message" => "impossible de bloquer son évènement"], 401);
         }
@@ -586,7 +615,7 @@ class EventController extends Controller
 
     }
 
-    public function scanned2Qrcode(int $event, int $user)
+    public function scanned2Qrcode(int $event, int $user): JsonResponse
     {
         $event_user = EventParticipant::whereEventId($event)
             ->whereUserId($user)

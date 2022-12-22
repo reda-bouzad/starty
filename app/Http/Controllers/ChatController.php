@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Events\MessageSent;
-use App\Events\NewChat;
 use App\Http\Requests\ChatRequest;
 use App\Http\Requests\MessageRequest;
 use App\Http\Resources\ChatMessageResource;
@@ -15,18 +14,22 @@ use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\ChatUser;
 use App\Models\Follow;
-use App\Models\Group;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Notification;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
 
 class ChatController extends Controller
 {
-    public  function createChat(ChatRequest $request){
+    public  function createChat(ChatRequest $request): ChatResource
+    {
         $room = $request->with;
         $room[] = Auth::id();
         $chat = null;
@@ -60,7 +63,7 @@ class ChatController extends Controller
      SendGroupCreateEventJob::dispatch($chat,collect($room)->filter(fn($el)=> $el !== Auth::id()));
       return new ChatResource($chat->load('members'));
     }
-    public function createMessage( MessageRequest $request, Chat $chat)
+    public function createMessage( MessageRequest $request, Chat $chat): ChatMessageResource
     {
 
          $content =$request->input('content',"");
@@ -89,12 +92,13 @@ class ChatController extends Controller
             $to->save();
         }
 
-        if($from_message){
-            $from_message->getMedia('files')
-                     ->each(fn($el) =>  $message->addMediaFromStream($el->stream())
-                         ->usingFileName(Str::uuid().".".$el->extension)
-                         ->toMediaCollection('files'));
-        }
+        $from_message?->getMedia('files')
+            ->each(/**
+             * @throws FileIsTooBig
+             * @throws FileDoesNotExist
+             */ fn($el) => $message->addMediaFromStream($el->stream())
+                ->usingFileName(Str::uuid() . "." . $el->extension)
+                ->toMediaCollection('files'));
         if ($request->hasFile('files')) {
             $message->addMultipleMediaFromRequest(['files'])
                 ->each(function ($fileAdder) {
@@ -108,12 +112,12 @@ class ChatController extends Controller
         $otherMembers = $chat->members()
             ->where('users.id','!=',Auth::id())
             ->get(['users.id']);
-        \Notification::send($otherMembers, new NewMessageNotification($message));
+        Notification::send($otherMembers, new NewMessageNotification($message));
 
         return new ChatMessageResource($message);
     }
 
-    public function getChats(Request $request)
+    public function getChats(Request $request): AnonymousResourceCollection
     {
         $q = $request->search;
         $type = $request->type;
@@ -166,19 +170,19 @@ class ChatController extends Controller
         return   ChatResource::collection($chats);
     }
 
-    public function getChatMessages(Request $request,Chat $chat)
+    public function getChatMessages(Request $request,Chat $chat): AnonymousResourceCollection
     {
 
-        $messages = ChatMessageResource::collection(
+        return ChatMessageResource::collection(
             ChatMessage::with('responseToMessage:id,content,sender')
                 ->where('chat_id', $chat->id)
                 ->latest()
                 ->paginate($request->input('per_page',20))
             );
-        return $messages;
     }
 
-    public function getLastMessagesAfterId(Request $request){
+    public function getLastMessagesAfterId(Request $request): AnonymousResourceCollection
+    {
             return ChatMessageResource::collection(
                 ChatMessage::when($request->last_id,function($query)use($request){
                     $query->where('id','>',$request->last_id);
@@ -201,6 +205,9 @@ class ChatController extends Controller
 
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function addToGroup(Request $request, Chat $chat){
         if($chat->isGroup()){
             $this->validate($request,[
@@ -214,6 +221,9 @@ class ChatController extends Controller
 
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function removeToGroup(Request $request, Chat $chat){
         $this->validate($request,[
             "list" => "required|array"
@@ -221,7 +231,13 @@ class ChatController extends Controller
         $chat->members()->detach($request->list);
     }
 
-    public function addImageToGroup(Request $request, Chat $chat){
+    /**
+     * @throws ValidationException
+     * @throws FileDoesNotExist
+     * @throws FileIsTooBig
+     */
+    public function addImageToGroup(Request $request, Chat $chat): ChatResource
+    {
         $this->validate($request,[
             "avatar" => "required|image"
         ]);
@@ -252,6 +268,10 @@ class ChatController extends Controller
             $user->save();
         }
     }
+
+    /**
+     * @throws ValidationException
+     */
     public function updateName(Request $request, Chat $chat){
         $this->validate($request, [
             "name" =>"required|string"
@@ -260,7 +280,8 @@ class ChatController extends Controller
         $chat->save();
     }
 
-    public function getChatMembers(Request $request, Chat $chat){
+    public function getChatMembers(Request $request, Chat $chat): AnonymousResourceCollection
+    {
         return UserResource::collection(
             $chat->members()->paginate($request->input("per_page",30))
         );
@@ -280,7 +301,8 @@ class ChatController extends Controller
         $user->save();
     }
 
-    public function archiveList(){
+    public function archiveList(): AnonymousResourceCollection
+    {
         $chats = Chat::withoutGlobalScope('archive')->with([
                 'lastMessage',
                 'event:id,label,chat_id',

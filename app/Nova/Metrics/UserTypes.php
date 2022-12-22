@@ -3,8 +3,11 @@
 namespace App\Nova\Metrics;
 
 use App\Models\User;
+use DateInterval;
+use DateTimeInterface;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Partition;
+use Laravel\Nova\Metrics\PartitionResult;
 
 class UserTypes extends Partition
 {
@@ -14,10 +17,10 @@ class UserTypes extends Partition
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return mixed
+     * @param NovaRequest $request
+     * @return PartitionResult
      */
-    public function calculate(NovaRequest $request)
+    public function calculate(NovaRequest $request): PartitionResult
     {
         return $this->count($request, User::class, 'user_type');
     }
@@ -25,11 +28,12 @@ class UserTypes extends Partition
     /**
      * Determine the amount of time the results of the metric should be cached.
      *
-     * @return \DateTimeInterface|\DateInterval|float|int|null
+     * @return DateTimeInterface|DateInterval|float|int|null
      */
-    public function cacheFor()
+    public function cacheFor():DateInterval|float|DateTimeInterface|int|null
     {
         // return now()->addMinutes(5);
+        return null;
     }
 
     /**
@@ -37,7 +41,7 @@ class UserTypes extends Partition
      *
      * @return string
      */
-    public function uriKey()
+    public function uriKey(): string
     {
         return 'user-types';
     }

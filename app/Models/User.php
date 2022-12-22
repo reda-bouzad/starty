@@ -27,7 +27,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $lastname
  * @property string|null $phone_number
  * @property string|null $email
- * @property string|null $revolut_customer_id
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $password
  * @property string $firebase_uuid
@@ -130,7 +129,7 @@ class User extends Authenticatable implements HasMedia
         static::addGlobalScope(function($query){
             $query->when(!Nova::check(request()) && \Auth::user(),function(Builder $query){
                 $query->whereNotIn('users.id',\Auth::user()->blocked_by ?? []);
-                $query->where('type_user','!=','administrator');
+                $query->where('user_type','!=','administrator');
             });
         });
        // static::addGlobalScope('finished',new SubscribeFinishScope());
@@ -178,6 +177,7 @@ class User extends Authenticatable implements HasMedia
         return $this->belongsToMany(Party::class,'event_participants','user_id','event_id')
             ->using(EventParticipant::class)
             ->wherePivot('payment_processing',false)
+            ->where('end_at','>',now()->subDay())
             ->withPivot(['accepted','scanned','rejected','payment_processing','payment_intent_id']);
     }
 
@@ -226,10 +226,10 @@ class User extends Authenticatable implements HasMedia
     public function createAccount(){
         $params = [
             'type' => 'express',
-            'capabilities' => [
-                'card_payments' => ['requested' => true],
-                'transfers' => ['requested' => true],
-            ],
+            /*'capabilities' => [
+                'card_payments' => ['requested' => false],
+                'transfers' => ['requested' => false],
+            ],*/
 //            'email' => $this->email,
             'business_type' => 'individual',
             'metadata' => [
@@ -252,7 +252,6 @@ class User extends Authenticatable implements HasMedia
     public function getAccount(){
         return Cashier::stripe()->accounts->retrieve($this->stripe_account);
     }
-
 
     public function scopeRegular(Builder $query){
         $query->whereNotNull('lastname')

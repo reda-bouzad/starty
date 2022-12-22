@@ -24,7 +24,7 @@ class LoginRequest extends FormRequest
      */
     public function rules()
     {
-        return []; /*[
+        return [
             "firebase_token" =>[
                 "required",
                 new VerifyTelNumberRule(true)
@@ -33,6 +33,6 @@ class LoginRequest extends FormRequest
                 "sometimes",
                 new VerifyTelNumberRule()
             ]
-        ];*/
+        ];
     }
 }

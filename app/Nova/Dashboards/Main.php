@@ -3,15 +3,13 @@
 namespace App\Nova\Dashboards;
 
 use App\Nova\Metrics\EventTrend;
-use App\Nova\Metrics\NbUsers;
-use App\Nova\Metrics\UserTypes;
-use Laravel\Nova\Cards\Help;
+use App\Nova\Metrics\UserCount;
 use Laravel\Nova\Dashboards\Main as Dashboard;
 
 class Main extends Dashboard
 {
 
-    public function name()
+    public function name(): string
     {
         return 'Tableau de bord';
     }
@@ -21,11 +19,10 @@ class Main extends Dashboard
      *
      * @return array
      */
-    public function cards()
+    public function cards(): array
     {
         return [
-            new UserTypes,
-            new NbUsers,
+            new UserCount(),
             new EventTrend()
         ];
     }

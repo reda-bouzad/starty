@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Nova\Actions\SelfieVerificationReminder;
+use App\Nova\Actions\SendNotificationToUsers;
 use App\Nova\Actions\VerifyIdentityAction;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Media;
@@ -101,6 +102,8 @@ class User extends Resource
 
             Date::make('Date de naissance', 'birth_date')
                 ->nullable(),
+
+            Textarea::make('Description')->nullable(),
             JSON::make('Dernière position','last_location', [
                 Text::make('latitude')->rules(['nullable','numeric', 'between:-90,90'])
                     ->displayUsing(fn ($request, $model, $attribute) => optional($model->last_location)->latitude),
@@ -117,7 +120,6 @@ class User extends Resource
 
             Hidden::make('user_type')->default('customer'),
 
-            Textarea::make('Description')->nullable(),
             MorphToMany::make('Signalement','reports',Report::class),
 
         ];
@@ -166,7 +168,8 @@ class User extends Resource
     {
         return [
             new VerifyIdentityAction(),
-            new SelfieVerificationReminder()
+            new SelfieVerificationReminder(),
+            new SendNotificationToUsers()
         ];
     }
 

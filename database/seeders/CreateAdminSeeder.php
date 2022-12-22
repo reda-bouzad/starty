@@ -16,14 +16,23 @@ class CreateAdminSeeder extends Seeder
      */
     public function run()
     {
-        if (User::count() > 0) return;
+        if (User::where('user_type','administrateur')->count() > 2) return;
 
         User::create([
             'firstname' => 'Admin',
             'lastname' => 'Admin',
-            'email' => 'admin@startyworld.com',
+            'email' => 'jp@startyworld.com',
             'user_type' => 'administrator',
-            'password' => bcrypt('ZRQnaHcT0FXgSO'),
+            'password' => bcrypt('ZRQna78sdfHcT0FXgSO'),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
+        User::create([
+            'firstname' => 'Admin',
+            'lastname' => 'Admin',
+            'email' => 'tutu@startyworld.com',
+            'user_type' => 'administrator',
+            'password' => bcrypt('fdsEZRQnaHcT0FX@'),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);

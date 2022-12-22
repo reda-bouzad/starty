@@ -4,6 +4,8 @@ namespace App\Observers;
 
 use App\Models\Chat;
 use App\Models\Party;
+use Laravel\Nova\Nova;
+use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class EventObserver
 {
@@ -15,6 +17,10 @@ class EventObserver
      */
     public function created(Party $event)
     {
+        if($event->lat && $event->long){
+            $event->location = new Point($event->lat, $event->long);
+            $event->save();
+        }
         if($event->chat_id !== null) return;
        $chat =  Chat::create([
             "created_by" =>$event->user_id,
@@ -27,6 +33,7 @@ class EventObserver
            $chat->addMediaFromUrl($event->getFirstMediaUrl('first_image'));
        }
        $chat->members()->attach($event->user_id, ["state" => "direct"]);
+
     }
 
     /**
@@ -37,7 +44,9 @@ class EventObserver
      */
     public function updated(Party $event)
     {
-        //
+        $event->lat  = optional($event->location)->latitude;
+        $event->long = optional($event->location)->longitude;
+        $event->saveQuietly();
     }
 
     /**

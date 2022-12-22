@@ -3,8 +3,11 @@
 namespace App\Nova\Metrics;
 
 use App\Models\User;
+use DateInterval;
+use DateTimeInterface;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Metrics\Trend;
+use Laravel\Nova\Metrics\TrendResult;
 
 class NbUsers extends Trend
 {
@@ -14,12 +17,12 @@ class NbUsers extends Trend
     /**
      * Calculate the value of the metric.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
-     * @return mixed
+     * @param NovaRequest $request
+     * @return TrendResult
      */
-    public function calculate(NovaRequest $request)
+    public function calculate(NovaRequest $request): TrendResult
     {
-        return $this->countByDays($request, User::where('user_type', 'customer'));
+        return $this->countByDays($request, User::where('user_type', '!=','administrator')->whereNotNull('firstname'));
     }
 
     /**
@@ -27,7 +30,7 @@ class NbUsers extends Trend
      *
      * @return array
      */
-    public function ranges()
+    public function ranges(): array
     {
         return [
             30 => __('30 Days'),
@@ -39,11 +42,12 @@ class NbUsers extends Trend
     /**
      * Determine the amount of time the results of the metric should be cached.
      *
-     * @return \DateTimeInterface|\DateInterval|float|int|null
+     * @return DateTimeInterface|DateInterval|float|int|null
      */
-    public function cacheFor()
+    public function cacheFor(): DateInterval|float|DateTimeInterface|int|null
     {
         // return now()->addMinutes(5);
+        return null;
     }
 
     /**

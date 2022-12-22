@@ -4,7 +4,6 @@ namespace App\Nova\Actions;
 
 use App\Notifications\SelfieVerificationReminderNotification;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Collection;
 use Laravel\Nova\Actions\Action;
@@ -19,11 +18,11 @@ class SelfieVerificationReminder extends Action
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
-     * @return mixed
+     * @param ActionFields $fields
+     * @param Collection $models
+     * @return string[]
      */
-    public function handle(ActionFields $fields, Collection $models)
+    public function handle(ActionFields $fields, Collection $models): array
     {
         \Notification::send($models, new SelfieVerificationReminderNotification());
         return Action::message('La notification a bien été envoyée');
@@ -32,10 +31,10 @@ class SelfieVerificationReminder extends Action
     /**
      * Get the fields available on the action.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param NovaRequest $request
      * @return array
      */
-    public function fields(NovaRequest $request)
+    public function fields(NovaRequest $request): array
     {
         return [];
     }

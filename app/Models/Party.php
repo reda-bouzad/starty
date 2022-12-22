@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Laravel\Nova\Nova;
 use MatanYadaev\EloquentSpatial\SpatialBuilder;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Objects\Polygon;
@@ -46,7 +47,6 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class Party extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
-
     protected $table="events";
     protected $appends = ['thumb','first_image','first_participants'];
     protected  $with = ['media'];
@@ -69,7 +69,7 @@ class Party extends Model implements HasMedia
         static::addGlobalScope(function($query){
           $query
               ->whereHas('user')
-              ->when(\Auth::user(),function(Builder $query){
+              ->when(!Nova::check(request()) && \Auth::user(),function(Builder $query){
                 $query->whereNotIn('events.id',\Auth::user()->blocked_event ?? []);
                 $query->whereNotIn('events.user_id',\Auth::user()->blocked_user ?? []);
           });

@@ -19,6 +19,8 @@ use Laravel\Nova\Fields\Select;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use Stepanenko3\NovaJson\JSON;
 
 class Event extends Resource
 {
@@ -63,7 +65,7 @@ class Event extends Resource
             Heading::make('<p class="text-danger">* Tous les champs sont requis.</p>')->asHtml(),
             ID::make()->sortable(),
 
-            BelongsTo::make('Utilisateur', 'user', User::class),
+            BelongsTo::make('Utilisateur', 'user', User::class)->searchable(),
 
             Text::make('Libellé', 'label'),
 
@@ -77,7 +79,7 @@ class Event extends Resource
 
             Boolean::make('Payant', 'pricy'),
 
-            Currency::make('Prix', 'price'),
+            Currency::make('Prix', 'price')->default(fn() => 0),
 
             DateTime::make('Début', 'start_at'),
 
@@ -86,8 +88,11 @@ class Event extends Resource
             Textarea::make('Adresse', 'address'),
 
             Textarea::make('Description'),
-            Images::make('QrCode ticket','qr_code'),
-
+            Text::make('latitude','lat')->rules(['required','numeric', 'between:-90,90'])
+                ->default(fn () => optional($this->location)->latitude),
+            Text::make('longitude','long')->rules(['required','numeric', 'between:-180,180'])
+                ->default(fn () => optional($this->location)->longitude),
+            Images::make('QrCode ticket','qr_code')->readonly(),
             BelongsToMany::make('Participants', 'participants', User::class),
             BelongsToMany::make('Signalement','reports',Report::class)
 

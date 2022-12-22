@@ -14,7 +14,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property int $active_facebook_login
  * @property int $active_google_login
  * @property int $active_apple_login
- * @property int $revolut_pk
  * @property int $active_phone_number_login
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

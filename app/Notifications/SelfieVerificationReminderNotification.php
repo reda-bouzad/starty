@@ -16,7 +16,6 @@ class SelfieVerificationReminderNotification extends Notification implements Sho
 {
     use Queueable;
 
-    use Queueable;
 
     private array $data;
     private array $title;
@@ -36,8 +35,8 @@ class SelfieVerificationReminderNotification extends Notification implements Sho
             "en" => "Reminder!!"
         ];
         $this->content = [
-            "fr" => "Votre image selfie n'est pas adéquate pour la validation de votre compte, aller dans votre profil et mettez une  image selfie claire nous permettant de valider votre compte svp!",
-            "en" => "Your selfie image is not adequate for the validation of your account, go to your profile and put a clear selfie image allowing us to validate your account please!"
+            "fr" => "Votre selfie de securité n’est pas conforme pour la certification de votre compte.Rendez vous dans vos paramètres afin de la modifier.",
+            "en" => "Your security selfie is not compliant for your account certification. Please go to your settings to change it."
         ];
 //        dd($this->title, $this->content, $this->data);
     }
@@ -65,17 +64,7 @@ class SelfieVerificationReminderNotification extends Notification implements Sho
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
                 ->setBody($this->content[$notifiable->lang ?? App::getLocale()])
-            )->setApns(\NotificationChannels\Fcm\Resources\ApnsConfig::create()
-                ->setPayload([
-                    "aps" =>[
-                        "contentAvailable" => true
-                    ]
-                ])
-                ->setHeaders([
-                    "apns-push-type"=> "background",
-                    "apns-priority"=> "5", // Must be `5` when `contentAvailable` is set to true.
-                    "apns-topic"=> "io.flutter.plugins.firebase.messaging", // bundle identifier
-                ]));
+            );
     }
 
     /**

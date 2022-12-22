@@ -68,17 +68,7 @@ class RejectedEventNotification extends Notification implements ShouldQueue
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
                 ->setBody($this->content[$notifiable->lang ?? App::getLocale()])
-            )->setApns(\NotificationChannels\Fcm\Resources\ApnsConfig::create()
-                ->setPayload([
-                    "aps" =>[
-                        "contentAvailable" => true
-                    ]
-                ])
-                ->setHeaders([
-                    "apns-push-type"=> "background",
-                    "apns-priority"=> "5", // Must be `5` when `contentAvailable` is set to true.
-                    "apns-topic"=> "io.flutter.plugins.firebase.messaging", // bundle identifier
-                ]));
+            );
     }
 
     /**

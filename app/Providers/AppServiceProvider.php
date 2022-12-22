@@ -30,5 +30,6 @@ class AppServiceProvider extends ServiceProvider
         ResourceCollection::withoutWrapping();
         Party::observe(EventObserver::class);
 
+
     }
 }

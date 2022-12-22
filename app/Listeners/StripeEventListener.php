@@ -44,7 +44,7 @@ class StripeEventListener
                 $user = User::find($metadata['starty_user_id']);
                 $user->stripe_merchant_country = $data['country'];
 
-                if($data['payouts_enabled'] && $data['capabilities']['card_payments'] === "active" && $data['capabilities']['transfers'] ==='active') {
+                if($data['payouts_enabled']) {
                     if($user->stripe_account_status === "enable") return;
                     $user->stripe_account_status = "enable";
                     $user->notify(new AccountValidateNotification($user->stripe_account_status));
