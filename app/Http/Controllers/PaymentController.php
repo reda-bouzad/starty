@@ -8,6 +8,8 @@ use App\Models\Party;
 use App\Models\User;
 use Auth;
 use Exception;
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -18,18 +20,16 @@ class PaymentController extends Controller
 
     public function paymentLink(Party $event): JsonResponse
     {
-
-
-        if (!Auth::user()->revolut_customer_id) {
-
-            $res = Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "customers", [
-                "email" => Auth::user()?->email,
+        if (Auth::user()?->revolut_customer_id) {
+            $res = $this->getRes($event);
+        } else if (Auth::user()?->email) {
+            $res_cus_c = Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "customers", [
+                "email" => Auth::user()->email,
                 "full_name" => Auth::user()->firstname . ' ' . Auth::user()->lastname,
                 "phone" => Auth::user()?->phone_number
             ]);
-            Log::info($res->status());
-            if ($res->status() != 201) {
-                if ($res->json('code') == 1018) {
+            if ($res_cus_c->status() != 201) {
+                if ($res_cus_c->json('code') == 1018) {
                     $cus = Http::withToken(AppConfig::first()->revolut_pk)->get(env('REVOLUT_BASE_URL') . "customers");
                     $id = collect($cus->object())->firstWhere(fn($x) => $x->email == Auth::user()->email)->id;
                     User::where(["id" => Auth::id()])->update(["revolut_customer_id" => $id]);
@@ -37,22 +37,18 @@ class PaymentController extends Controller
                     return response()->json(["message" => "server_problem"], 500);
                 }
             } else {
-                User::where(["id" => Auth::id()])->update(["revolut_customer_id" => $res->json("id")]);
+                User::where(["id" => Auth::id()])->update(["revolut_customer_id" => $res_cus_c->json("id")]);
             }
+            $res = $this->getRes($event);
+        } else {
+            $res = $this->getRes($event, false);
         }
 
 
-        $res = Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders", [
-            "amount" => $event->price * 100,
-            "description" => 'événement "' . $event->label . '" pour "' . $event->user->firstname . ' ' . $event->user->lastname . '"',
-            "currency" => $event->devise,
-            "customer_id" => Auth::user()->revolut_customer_id,
-            "capture_mode" => $event->type == "public" ? "AUTOMATIC" : "MANUAL",
-            "metadata" => [
-                "user_id" => Auth::id(),
-                "event_id" => $event->id,
-            ]
-        ]);
+        if ($res->status() != 201) {
+            response()->json(["message" => "server_error"], 500);
+        }
+
 
         if (
             !EventParticipant::where([
@@ -74,12 +70,12 @@ class PaymentController extends Controller
                 "event_id" => $event->id,
                 "user_id" => Auth::id()
             ])->update([
-                    "accepted" => false,
-                    "rejected" => false,
-                    "status" => $res->json("state"),
-                    "payment_intent_id" => $res->json('id'),
-                    "payment_processing" => true
-                ]);
+                "accepted" => false,
+                "rejected" => false,
+                "status" => $res->json("state"),
+                "payment_intent_id" => $res->json('id'),
+                "payment_processing" => true
+            ]);
         }
 
         return response()->json(["url" => $res->json('checkout_url')]);
@@ -157,5 +153,39 @@ class PaymentController extends Controller
         }
 
         return response()->json(["message" => "ok"]);
+    }
+
+    /**
+     * @param Party $event
+     * @param bool $with_customer_id
+     * @return PromiseInterface|Response
+     */
+    public function getRes(Party $event, bool $with_customer_id = true): Response|PromiseInterface
+    {
+        if ($with_customer_id) {
+            return Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders", [
+                "amount" => $event->price * 100,
+                "description" => 'événement "' . $event->label . '" pour "' . $event->user->firstname . ' ' . $event->user->lastname . '"',
+                "currency" => $event->devise,
+                "customer_id" => Auth::user()->revolut_customer_id,
+                "capture_mode" => $event->type == "public" ? "AUTOMATIC" : "MANUAL",
+                "metadata" => [
+                    "user_id" => Auth::id(),
+                    "event_id" => $event->id,
+                ]
+            ]);
+        } else {
+            return Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders", [
+                "amount" => $event->price * 100,
+                "description" => 'événement "' . $event->label . '" pour "' . $event->user->firstname . ' ' . $event->user->lastname . '"',
+                "currency" => $event->devise,
+                "capture_mode" => $event->type == "public" ? "AUTOMATIC" : "MANUAL",
+                "metadata" => [
+                    "user_id" => Auth::id(),
+                    "event_id" => $event->id,
+                    "user_phone_number" => Auth::user()?->phone_number,
+                ]
+            ]);
+        }
     }
 }

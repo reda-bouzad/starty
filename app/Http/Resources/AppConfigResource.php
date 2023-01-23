@@ -28,7 +28,7 @@ class AppConfigResource extends JsonResource
             "active_apple_login" => $this->active_apple_login,
             "active_google_login" => $this->active_google_login,
             "active_phone_number_login" => $this->active_phone_number_login,
-            "commission" => $this->commision,
+            "commission" => $this->commission,
             "stripe_pk" => $this->stripe_pk,
             "android_build" => $this->android_build,
             "ios_build" => $this->ios_build,

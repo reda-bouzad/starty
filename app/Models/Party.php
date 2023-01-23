@@ -18,7 +18,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 /**
  * App\Models\Event
  * @property  int id
+ * @property  int|null price
  * @property  string label
+ * @property  string devise
+ * @property  string type
  * @property \MatanYadaev\EloquentSpatial\Objects\Point|null $location
  * @property \MatanYadaev\EloquentSpatial\Objects\Geometry|null $area
  * @method static SpatialBuilder|Event newModelQuery()

@@ -29,6 +29,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $password
+ * @property string|null $revolut_customer_id
  * @property string $firebase_uuid
  * @property string|null $gender
  * @property string|null $birth_date
