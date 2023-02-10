@@ -29,12 +29,18 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property string|null $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $password
+ * @property string|null $pseudo
+ * @property string|null $address
+ * @property float|null $preferred_radius
+ * @property string|null $lang
+ * @property point|null $last_location
  * @property string|null $revolut_customer_id
  * @property string $firebase_uuid
  * @property string|null $gender
  * @property string|null $birth_date
  * @property string|null $description
  * @property string $user_type
+ * @property boolean show_pseudo_only
  * @property int $allow_location_access
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -115,6 +121,7 @@ class User extends Authenticatable implements HasMedia
         'email_verified_at' => 'datetime',
         'birth_date' => 'date',
         'is_verified' => 'boolean',
+        'show_pseudo_only' => 'boolean',
         'blocked_by' => 'array',
         'blocked_user' => 'array',
         'blocked_event' => 'array',

@@ -22,6 +22,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property  string label
  * @property  string devise
  * @property  string type
+ * @property  bool|null pricy
  * @property \MatanYadaev\EloquentSpatial\Objects\Point|null $location
  * @property \MatanYadaev\EloquentSpatial\Objects\Geometry|null $area
  * @method static SpatialBuilder|Event newModelQuery()
@@ -106,6 +107,12 @@ class Party extends Model implements HasMedia
             "order" => $media->getCustomProperty('order') ?? 0
         ])->all();
     }
+
+    public function price_categories(){
+        return $this->hasMany(PriceCategory::class,'event_id');
+    }
+
+
     public function getThumbAttribute()
     {
         return $this->getMedia('first_image')->map->getUrl('thumb')->first();

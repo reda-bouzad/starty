@@ -50,6 +50,9 @@ class EventController extends Controller
         ]);
 
         $event = Party::create($data);
+        $event->price_categories()->createMany([
+            ["price" => 90.5, "name" => "default"],
+        ]);
 
 
         if ($eventRequest->hasFile('images')) {
@@ -67,8 +70,6 @@ class EventController extends Controller
             ->where('id', '!=', Auth::id())
             ->get(['id']);
         Notification::send($users, (new NewEventNotification($event))->delay(now()->addMinutes(10)));
-
-
 
 
         return response()->json(new EventResource($event));
@@ -210,32 +211,31 @@ class EventController extends Controller
                 $query->when(
                     $request->organise,
                     function (Builder $query) use ($request) {
-                            return $query->where('user_id', $request->organise === "1" ? "=" : "!=", Auth::id());
-                        }
+                        return $query->where('user_id', $request->organise === "1" ? "=" : "!=", Auth::id());
+                    }
                 )
                     ->when(
                         $request->attend,
                         function (Builder $query) use ($request) {
-                                return $query->orWhereHas(
-                                    'acceptedParticipants',
-                                    function ($query) use ($request) {
-                                                        return $query->where('users.id', $request->attend === "1" ? "=" : "!=", Auth::id());
-                                                    }
-                                );
-                            }
+                            return $query->orWhereHas(
+                                'acceptedParticipants',
+                                function ($query) use ($request) {
+                                    return $query->where('users.id', $request->attend === "1" ? "=" : "!=", Auth::id());
+                                }
+                            );
+                        }
                     )->when(
                         $request->attended,
                         function ($query) use ($request) {
-                                return $query->orWhereHas(
-                                    'scannedParticipants',
-                                    function (Builder $query) use ($request) {
-                                                        return $query->where('users.id', $request->attended === "1" ? "=" : "!=", Auth::id());
-                                                    }
-                                );
-                            }
+                            return $query->orWhereHas(
+                                'scannedParticipants',
+                                function (Builder $query) use ($request) {
+                                    return $query->where('users.id', $request->attended === "1" ? "=" : "!=", Auth::id());
+                                }
+                            );
+                        }
                     );
             })
-
             ->when($request->start, function (Builder $query) use ($request) {
                 return $query->where('start_at', '>=', $request->start);
             })
@@ -248,11 +248,11 @@ class EventController extends Controller
             ->when($request->type, function ($query) use ($request) {
                 return $query->where('type', $request->type);
             })->when($request->lat && $request->long && $request->radius, function (SpatialBuilder $query) use ($request) {
-            $center = new Point($request->get('lat', 0.0), $request->get('long', 0.0));
-            return $query->whereDistanceSphere('location', $center, '<=', $request->radius)
-                ->withDistanceSphere('location', $center)
-                ->orderByDistanceSphere('location', $center);
-        })
+                $center = new Point($request->get('lat', 0.0), $request->get('long', 0.0));
+                return $query->whereDistanceSphere('location', $center, '<=', $request->radius)
+                    ->withDistanceSphere('location', $center)
+                    ->orderByDistanceSphere('location', $center);
+            })
             ->paginate($request->input('per_page', 20));
 
 
@@ -386,9 +386,9 @@ class EventController extends Controller
                 $upper = Str::upper($request->search);
                 return $query->where(
                     function ($query) use ($lower, $upper) {
-                            $query->where('label', 'like', "%$lower%")
-                                ->orWhere('label', 'like', "%$upper%");
-                        }
+                        $query->where('label', 'like', "%$lower%")
+                            ->orWhere('label', 'like', "%$upper%");
+                    }
                 );
             })
             ->paginate($request->input('per_page', 20));
@@ -496,7 +496,7 @@ class EventController extends Controller
 
         if ($event_participant->payment_intent_id) {
             $res = Http::withToken(AppConfig::first()->revolut_pk)->
-                post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $event->price]);
+            post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $event->price]);
             if (!$res->ok()) {
                 return response()->json(["message" => "payment_failed"], 403);
             }
@@ -519,6 +519,7 @@ class EventController extends Controller
         User::find($user)->notify(new AcceptedRequestEventNotification($event));
         return response()->noContent();
     }
+
     public function rejectRequest(Party $event, int $user): Response|JsonResponse
     {
         if (

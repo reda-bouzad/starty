@@ -6,7 +6,7 @@ use App\Models\Party;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin Event
+ * @mixin Party
  */
 class EventResource extends JsonResource
 {
@@ -44,6 +44,7 @@ class EventResource extends JsonResource
                 "distance" => $this->distance,
             ],
             'thumb' => $this->whenAppended('thumb'),
+            'price_categories'=>$this->price_categories,
             'first_image' => $this->whenAppended('first_image'),
             'images' => $this->whenAppended('images'),
             'qr_code' => $this->whenAppended('qr_code'),
