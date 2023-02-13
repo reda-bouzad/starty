@@ -50,9 +50,11 @@ class EventController extends Controller
         ]);
 
         $event = Party::create($data);
-        $event->price_categories()->createMany([
-            ["price" => 90.5, "name" => "default"],
-        ]);
+        $event->price_categories()->createMany(collect($eventRequest->price_categories)->map(fn($e) => [
+            "price" => $e['price'],
+            "name" => $e['name'],
+            "event_id" => $event->id
+        ])->toArray());
 
 
         if ($eventRequest->hasFile('images')) {

@@ -2,8 +2,22 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PriceCategory;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * App\Http\Requests
+ *
+ * @property string label
+ * @property string type
+ * @property string contact
+ * @property boolean pricy
+ * @property array price_categories
+ * @property float price
+ * @property int nb_participants
+ * @property float lat
+ * @property float long
+ */
 class EventRequest extends FormRequest
 {
     /**
@@ -28,6 +42,9 @@ class EventRequest extends FormRequest
             'type' => 'required|string|in:public,private',
             'contact' => 'required|string|max:255',
             'pricy' => 'required|boolean',
+            'price_categories.price'=>'required|numeric',
+            'price_categories.name'=>'required|string|max:200',
+            'price_categories'=>'required_if:pricy,==,1|array:price,name',
             'price' => 'required_if:pricy,==,1',
             'nb_participants' => 'required|integer',
             'start_at' => 'required',
