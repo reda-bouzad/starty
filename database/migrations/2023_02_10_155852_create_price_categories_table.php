@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained('events','id')->cascadeOnDelete();
             $table->float("price");
             $table->string("name");
+            $table->string("devise");
             $table->timestamps();
         });
     }

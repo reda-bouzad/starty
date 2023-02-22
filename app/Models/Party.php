@@ -100,6 +100,10 @@ class Party extends Model implements HasMedia
             ->performOnCollections('first_image');
     }
 
+    public function addPriceCategories(PriceCategory $priceCategories){
+
+    }
+
     public function getImagesAttribute()
     {
         return $this->getMedia('image')->map(fn($media) => [

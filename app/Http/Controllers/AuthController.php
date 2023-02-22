@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Mail\SendCodeMail;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
+use App\Rules\VerifyTelNumberRule;
 use App\Services\FirebaseAuthService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
@@ -25,9 +27,9 @@ use Str;
 class AuthController extends Controller
 {
 
+
     public function login(LoginRequest $request, FirebaseAuthService $firebaseAuthService): JsonResponse
     {
-
         $user = $firebaseAuthService->getOrCreateUser($request->firebase_token);
         $token = $user->createToken(Str::random(14));
         $user->phone_number = $user->phone_number ?? $request->phone_number;

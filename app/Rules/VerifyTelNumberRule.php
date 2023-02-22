@@ -34,6 +34,7 @@ class VerifyTelNumberRule implements Rule
         } else {
             $token_attribute = $attribute."_token";
             $token_value = request()->get($token_attribute);
+            error_log(implode(request()->all()));
             $validator = \Validator::make([$token_attribute =>$token_value],[$token_attribute =>'required']);
 
             if($validator->fails()) {
@@ -47,12 +48,12 @@ class VerifyTelNumberRule implements Rule
             /** @var Auth $auth */
             $auth = app('firebase.auth');
             $verifiedIdToken = $auth->verifyIdToken($token_value);
-
             if($this->is_token) return true;
             $uid = $verifiedIdToken->claims()->get('sub');
             $data = $auth->getUser($uid);
             return $data->phoneNumber === $value;
         } catch (\Exception $e){
+            error_log($e);
             return false;
         }
     }

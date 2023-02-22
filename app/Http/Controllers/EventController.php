@@ -40,8 +40,17 @@ use Stripe\Exception\ApiErrorException;
 
 class EventController extends Controller
 {
+    /**
+     * @throws ValidationException
+     */
     public function createEvent(EventRequest $eventRequest): JsonResponse
     {
+
+        if ($eventRequest->pricy) {
+            $this->validate($eventRequest, ['price_categories.*.price' => 'required|numeric',
+                'price_categories.*.devise' => 'required|string|max:4',
+                'price_categories.*.name' => 'required|string|max:200',]);
+        }
         $data = $eventRequest->except(['lat', 'long']);
         $data = array_merge($data, [
             "user_id" => Auth::id(),
@@ -49,12 +58,12 @@ class EventController extends Controller
             "remaining_participants" => $eventRequest->nb_participants,
         ]);
 
+        unset($data['price_categories']);
+
+
         $event = Party::create($data);
-        $event->price_categories()->createMany(collect($eventRequest->price_categories)->map(fn($e) => [
-            "price" => $e['price'],
-            "name" => $e['name'],
-            "event_id" => $event->id
-        ])->toArray());
+        $event->price_categories()->createMany(collect($eventRequest->price_categories)->map(fn($e) => [...$e, "event_id" => $event->id])->toArray());
+        error_log(json_encode($data));
 
 
         if ($eventRequest->hasFile('images')) {
@@ -71,7 +80,11 @@ class EventController extends Controller
         $users = User::inRadius($event->location->latitude, $event->location->longitude, 50000)
             ->where('id', '!=', Auth::id())
             ->get(['id']);
-        Notification::send($users, (new NewEventNotification($event))->delay(now()->addMinutes(10)));
+        try {
+            Notification::send($users, (new NewEventNotification($event))->delay(now()->addMinutes(10)));
+        } catch (Exception $e) {
+            Log::error($e);
+        }
 
 
         return response()->json(new EventResource($event));
