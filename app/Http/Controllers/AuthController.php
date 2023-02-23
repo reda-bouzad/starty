@@ -8,17 +8,16 @@ use App\Http\Resources\UserResource;
 use App\Mail\SendCodeMail;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
-use App\Rules\VerifyTelNumberRule;
 use App\Services\FirebaseAuthService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
@@ -34,6 +33,8 @@ class AuthController extends Controller
         $token = $user->createToken(Str::random(14));
         $user->phone_number = $user->phone_number ?? $request->phone_number;
         $user->save();
+        $user->loadCount('events');
+        Log::channel('stderr')->error($user->events_count);
 
         return response()->json([
             'access_token' => $token->plainTextToken,
@@ -47,6 +48,7 @@ class AuthController extends Controller
         $user = Auth::user();
         $user->load('jointEvents:id', 'likeEvents:id', 'follows:id', 'followers:id');
         $user->loadCount('unreadNotifications', 'followers', 'follows');
+        $user->loadCount('events');
         return response()->json(new UserResource($user));
     }
 

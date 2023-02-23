@@ -1,5 +1,7 @@
 <?php
 
+use Bramus\Monolog\Formatter\ColoredLineFormatter;
+use Bramus\Monolog\Formatter\ColorSchemes\TrafficLight;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;

@@ -2,15 +2,22 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Party;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @property Collection $events
+ * @property string $firstname
+ * @property string $lastname
+ */
 class UserResource extends JsonResource
 {
 
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
     public function toArray($request)
@@ -31,20 +38,20 @@ class UserResource extends JsonResource
             "gender" => $this->gender,
             "birth_date" => $this->birth_date,
             "is_verified" => $this->is_verified,
-            "follows" =>  UserResource::collection($this->whenLoaded('follows')),
-            "follow_ids" => $this->whenLoaded('follows',function(){
+            "follows" => UserResource::collection($this->whenLoaded('follows')),
+            "follow_ids" => $this->whenLoaded('follows', function () {
                 return $this->followers->map->id;
             }),
-            "followers" =>  UserResource::collection($this->whenLoaded('followers')),
-            "followers_ids" => $this->whenLoaded('followers',function(){
+            "followers" => UserResource::collection($this->whenLoaded('followers')),
+            "followers_ids" => $this->whenLoaded('followers', function () {
                 return $this->followers->map->id;
             }),
-            "like_events" =>  EventResource::collection($this->whenLoaded('likeEvents')),
-            "like_eventts_ids" => $this->whenLoaded('likeEvents',function(){
+            "like_events" => EventResource::collection($this->whenLoaded('likeEvents')),
+            "like_eventts_ids" => $this->whenLoaded('likeEvents', function () {
                 return $this->likeEvents->map->id;
             }),
-            "joint_events" => EventResource::collection( $this->whenLoaded('jointEvents')),
-            "events" =>  EventResource::collection($this->whenLoaded('events')),
+            "joint_events" => EventResource::collection($this->whenLoaded('jointEvents')),
+            "events_count"=>$this->events->count(),
             "followers_count" => $this->followers_count,
             "follows_count" => $this->follows_count,
             "fcm_token" => $this->fcm_token,
@@ -55,16 +62,16 @@ class UserResource extends JsonResource
             "preferred_radius" => $this->preferred_radius,
             "stripe_account_status" => $this->stripe_account_status,
             'stripe_merchant_country' => $this->stripe_merchant_country,
-            "pivot" => $this->whenPivotLoaded('event_participants',function(){
+            "pivot" => $this->whenPivotLoaded('event_participants', function () {
                 return [
                     "scanned" => $this->pivot->scanned,
-                    "accepted" =>$this->pivot->accepted,
+                    "accepted" => $this->pivot->accepted,
                     "rejected" => $this->pivot->rejected === true,
-                    'paid' => $this->pivot->payment_intent_id !==null && !$this->pivot->payment_processing
+                    'paid' => $this->pivot->payment_intent_id !== null && !$this->pivot->payment_processing
                 ];
             }),
 
 
-        ],fn($value) => $value !==null,0);
+        ], fn($value) => $value !== null, 0);
     }
 }
