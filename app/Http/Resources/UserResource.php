@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Party;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @property Collection $events
@@ -22,10 +22,11 @@ class UserResource extends JsonResource
      */
     public function toArray($request)
     {
+
         return array_filter([
             "id" => $this->id,
-            "firstname" => $this->firstname,
-            "lastname" => $this->lastname,
+            "firstname" => $this->show_pseudo_only && $this->id != Auth::id() ? null : $this->firstname,
+            "lastname" => $this->show_pseudo_only && $this->id != Auth::id() ? null : $this->lastname,
             "avatar" => $this->avatar,
             "show_pseudo_only" => $this->show_pseudo_only,
             "selfie" => $this->selfie,
@@ -51,7 +52,7 @@ class UserResource extends JsonResource
                 return $this->likeEvents->map->id;
             }),
             "joint_events" => EventResource::collection($this->whenLoaded('jointEvents')),
-            "events_count"=>$this->events->count(),
+            "events_count" => $this->events->count(),
             "followers_count" => $this->followers_count,
             "follows_count" => $this->follows_count,
             "fcm_token" => $this->fcm_token,

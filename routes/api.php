@@ -2,15 +2,14 @@
 
 use App\Http\Controllers\AppConfigController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\EventController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StartUpController;
-use App\Http\Controllers\ReportController;
-use App\Rules\VerifyTelNumberRule;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
@@ -133,7 +132,7 @@ Route::group(['middleware' => ['auth:sanctum', 'languable']], function () {
     Route::get('reports', [ReportController::class, 'lists']);
 
     Route::get('payments/{event}/{price}/checkout-link', [PaymentController::class, 'paymentLink']);
-    Route::get('payments/{event}/status', [PaymentController::class, 'paymentStatus']);
+    Route::get('payments/{event}/{ticket_id}/status', [PaymentController::class, 'paymentStatus']);
 
 });
 Route::get('app-config', [AppConfigController::class, 'appConfig']);

@@ -8,6 +8,7 @@ use App\Models\Party;
 use App\Models\PriceCategory;
 use App\Models\User;
 use Auth;
+use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
@@ -20,7 +21,16 @@ class PaymentController extends Controller
 
     public function paymentLink(Party $event, PriceCategory $price): JsonResponse
     {
-        error_log($price->id);
+        if (!$event->price_categories()->where("id", $price->id)->exists()) {
+            if (Carbon::parse($event->created_at)->isBefore(env("EVENT_TICKET_CHANGE"))) {
+                if ($event->price_categories()->count() == 0) {
+                    $price = PriceCategory::updateOrCreate(["event_id" => $event->id, "devise" => $event->devise, "name" => "default", "price" => $event->price]);
+                } else {
+                    $price = $event->price_categories()->first();
+                }
+            } else return response()->json(["message" => "invalid price"], 422);
+        }
+
         if (Auth::user()?->revolut_customer_id) {
             $res = $this->getRes($event, $price);
         } else if (Auth::user()?->email) {
@@ -54,7 +64,7 @@ class PaymentController extends Controller
         if (
             !EventParticipant::where([
                 "event_id" => $event->id,
-                "user_id" => Auth::id()
+                "user_id" => Auth::id(),
             ])->exists()
         ) {
             EventParticipant::Create([
@@ -64,12 +74,13 @@ class PaymentController extends Controller
                 "rejected" => false,
                 "status" => $res->json("state"),
                 "payment_intent_id" => $res->json('id'),
+                "ticket_id" => $price->id,
                 "payment_processing" => true
             ]);
         } else {
             EventParticipant::where([
                 "event_id" => $event->id,
-                "user_id" => Auth::id()
+                "user_id" => Auth::id(),
             ])->update([
                 "accepted" => false,
                 "rejected" => false,
@@ -81,13 +92,11 @@ class PaymentController extends Controller
         return response()->json(["url" => $res->json('checkout_url')]);
     }
 
-    public function paymentStatus(int $event): array
+    public function paymentStatus(int $event, int $ticket_id): array
     {
         try {
 
-            $event_participant = EventParticipant::getElement($event, Auth::id());
-
-            error_log($event_participant);
+            $event_participant = EventParticipant::getElement($event, Auth::id(), $ticket_id);
 
 
             $res = Http::withoutVerifying()->withToken(AppConfig::first()->revolut_pk)->get(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id);
@@ -97,7 +106,8 @@ class PaymentController extends Controller
 
                 EventParticipant::where([
                     "event_id" => $event,
-                    "user_id" => Auth::id()
+                    "user_id" => Auth::id(),
+                    "ticket_id" => $res->json('metadata')['ticket_id']
                 ])->first()->
                 update(["status" => $res->json("state")]);
                 return [
@@ -131,7 +141,8 @@ class PaymentController extends Controller
                 $metadata = $res->json('metadata');
                 EventParticipant::where([
                     "event_id" => $metadata['event_id'],
-                    "user_id" => $metadata['user_id']
+                    "user_id" => $metadata['user_id'],
+                    "ticket_id" => $metadata["ticket_id"]
                 ])->first()?->update(["payment_intent_id" => $res->json('id'), "accepted" => true, "status" => "COMPLETED"]);
                 break;
             }

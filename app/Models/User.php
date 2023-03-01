@@ -2,11 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\SubscribeFinishScope;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
@@ -87,8 +84,8 @@ class User extends Authenticatable implements HasMedia
 {
     use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, Billable;
 
-    protected $appends = ['avatar','location','selfie'];
-    protected  $with = ['media'];
+    protected $appends = ['avatar', 'location', 'selfie'];
+    protected $with = ['media'];
 //    protected $withCount =['followers','follows'];
 
     /**
@@ -96,7 +93,7 @@ class User extends Authenticatable implements HasMedia
      *
      * @var array<int, string>
      */
-     protected $guarded = [];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -134,13 +131,13 @@ class User extends Authenticatable implements HasMedia
     {
         parent::boot();
 
-        static::addGlobalScope(function($query){
-            $query->when(!Nova::check(request()) && \Auth::user(),function(Builder $query){
-                $query->whereNotIn('users.id',\Auth::user()->blocked_by ?? []);
-                $query->where('user_type','!=','administrator');
+        static::addGlobalScope(function ($query) {
+            $query->when(!Nova::check(request()) && \Auth::user(), function (Builder $query) {
+                $query->whereNotIn('users.id', \Auth::user()->blocked_by ?? []);
+                $query->where('user_type', '!=', 'administrator');
             });
         });
-       // static::addGlobalScope('finished',new SubscribeFinishScope());
+        // static::addGlobalScope('finished',new SubscribeFinishScope());
     }
 
     public function newEloquentBuilder($query): SpatialBuilder
@@ -152,6 +149,7 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->getFirstMediaUrl('avatar');
     }
+
     public function getSelfieAttribute()
     {
 
@@ -174,64 +172,70 @@ class User extends Authenticatable implements HasMedia
 
     public function getFullnameAttribute()
     {
-        return ($this->firstname && $this->lastname) ? $this->firstname.' '.$this->lastname : $this->email;
+        return ($this->firstname && $this->lastname) ? $this->firstname . ' ' . $this->lastname : $this->email;
     }
 
     public function participants()
     {
         return $this->hasMany(EventParticipant::class, 'user_id');
     }
-    public function jointEvents(){
-        return $this->belongsToMany(Party::class,'event_participants','user_id','event_id')
+
+    public function jointEvents()
+    {
+        return $this->belongsToMany(Party::class, 'event_participants', 'user_id', 'event_id')
             ->using(EventParticipant::class)
-            ->wherePivot('payment_processing',false)
-            ->where('end_at','>',now()->subDay())
-            ->withPivot(['accepted','scanned','rejected','payment_processing','payment_intent_id']);
+            ->wherePivot('payment_processing', false)
+            ->where('end_at', '>', now()->subDay())
+            ->withPivot(['accepted', 'scanned', 'rejected', 'payment_processing', 'payment_intent_id']);
     }
 
-    public function likeEvents(){
-        return $this->belongsToMany(Party::class,'event_likes','user_id','event_id');
+    public function likeEvents()
+    {
+        return $this->belongsToMany(Party::class, 'event_likes', 'user_id', 'event_id');
     }
 
-    public function events(){
-        return $this->hasMany(Party::class,'user_id');
+    public function events()
+    {
+        return $this->hasMany(Party::class, 'user_id');
     }
 
-    public function scopeInRadius(SpatialBuilder $query,$lat,$long, $radius){
+    public function scopeInRadius(SpatialBuilder $query, $lat, $long, $radius)
+    {
         $query->whereNotNull('last_location')
-            ->whereDistanceSphere('last_location', new Point($lat,$long), '<=', $radius);
+            ->whereDistanceSphere('last_location', new Point($lat, $long), '<=', $radius);
     }
 
-    public function followers(){
-        return $this->belongsToMany(User::class, 'follows','user_id','follower_id')
-
-            ->select('users.id','users.firstname','users.lastname')
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'follows', 'user_id', 'follower_id')
+            ->select('users.id', 'users.firstname', 'users.lastname')
             ->using(Follow::class);
     }
-    public function follows(){
+
+    public function follows()
+    {
         return $this
-            ->belongsToMany(User::class, 'follows','follower_id','user_id')
-            ->select('users.id','users.firstname','users.lastname')
+            ->belongsToMany(User::class, 'follows', 'follower_id', 'user_id')
+            ->select('users.id', 'users.firstname', 'users.lastname')
             ->using(Follow::class);
     }
 
 
-
-
-
-    public function getLocationAttribute(){
+    public function getLocationAttribute()
+    {
         return [
             "lat" => optional($this->last_location)->latitude,
             "long" => optional($this->last_location)->longitude
         ];
     }
 
-     public function reports()
+    public function reports()
     {
-        return $this->morphToMany(Report::class, 'model','model_report');
+        return $this->morphToMany(Report::class, 'model', 'model_report');
     }
 
-    public function createAccount(){
+    public function createAccount()
+    {
         $params = [
             'type' => 'express',
             /*'capabilities' => [
@@ -246,22 +250,23 @@ class User extends Authenticatable implements HasMedia
                 "phone_number" => $this->phone_number
             ]
         ];
-        if($this->email){
+        if ($this->email) {
             $params['email'] = $this->email;
         }
         $data = Cashier::stripe()->accounts->create($params);
 
-        $this->stripe_account  = $data['id'];
+        $this->stripe_account = $data['id'];
         $this->save();
     }
 
 
-
-    public function getAccount(){
+    public function getAccount()
+    {
         return Cashier::stripe()->accounts->retrieve($this->stripe_account);
     }
 
-    public function scopeRegular(Builder $query){
+    public function scopeRegular(Builder $query)
+    {
         $query->whereNotNull('lastname')
             ->whereNotNull('firstname');
     }

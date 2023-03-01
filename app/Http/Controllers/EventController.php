@@ -11,6 +11,7 @@ use App\Models\ChatUser;
 use App\Models\EventParticipant;
 use App\Models\ModelReport;
 use App\Models\Party;
+use App\Models\PriceCategory;
 use App\Models\User;
 use App\Notifications\AcceptedRequestEventNotification;
 use App\Notifications\CancelEventNotification;
@@ -48,7 +49,7 @@ class EventController extends Controller
 
         if ($eventRequest->pricy) {
             $this->validate($eventRequest, ['price_categories.*.price' => 'required|numeric',
-                'price_categories.*.devise' => 'required|string|max:4',
+                'price_categories.*.devise' => 'required|string|in:AUD,BGN,CAD,CHF,CZK,DKK,EUR,GBP,HKD,HRK,HUF,JPY,NOK,PLN,RON,SEK,USD,ZAR',
                 'price_categories.*.name' => 'required|string|max:200',]);
         }
         $data = $eventRequest->except(['lat', 'long']);
@@ -63,8 +64,6 @@ class EventController extends Controller
 
         $event = Party::create($data);
         $event->price_categories()->createMany(collect($eventRequest->price_categories)->map(fn($e) => [...$e, "event_id" => $event->id])->toArray());
-        error_log(json_encode($data));
-
 
         if ($eventRequest->hasFile('images')) {
             $event->addMultipleMediaFromRequest(['images'])
@@ -139,20 +138,19 @@ class EventController extends Controller
     public function getEvent(Party $event): JsonResponse
     {
         $event->append('images', 'qr_code');
-        $event->load('user', 'eventChat.members:id,firstname,lastname');
+        $event->load('user', 'eventChat.members:id');
         $event->loadCount(['participants', 'acceptedParticipants', 'requestedParticipants']);
         $event->load([
             'participants' => function ($query) {
                 $query->select('users.id');
             }
         ]);
-
         return response()->json(new EventResource($event));
     }
 
     public function updateEvent(Party $event, Request $request): JsonResponse
     {
-
+        $event->price_categories()->delete();
         $event->update([
             'label' => $request->label ?? $event->label,
             'type' => $request->type ?? $event->type,
@@ -167,8 +165,11 @@ class EventController extends Controller
             'description' => $request->description ?? $event->description,
             'address' => $request->address ?? $event->address,
             'share_link' => $request->share_link ?? $event->share_link,
-            'devise' => $request->devise ?? $event->devise
+            'devise' => $request->devise ?? $event->devise,
         ]);
+
+        $event->price_categories()->createMany($request->price_categories);
+
 
         if ($request->hasFile('images')) {
             $event->addMultipleMediaFromRequest(['images'])
@@ -330,8 +331,6 @@ class EventController extends Controller
             }
 
         }
-        Log::info('event_participant id :' . $eventParticipant->id);
-        Log::info('event type' . $event->type);
         EventParticipant::whereId($eventParticipant->id)->update(["payment_processing" => false, "accepted" => $event->type === "public", 'rejected' => false]);
         if ($event->chat_id && $event->type === "public" && !ChatUser::where('chat_id', $event->chat_id)->where('user_id', Auth::id())->exists()) {
             ChatUser::updateOrCreate([
@@ -507,11 +506,13 @@ class EventController extends Controller
             "event_id" => $event->id,
             "user_id" => $user
         ])->first();
-
+        
+        $ticket = PriceCategory::where('id', '=', $event_participant->ticket_id)->get()->first();
 
         if ($event_participant->payment_intent_id) {
-            $res = Http::withToken(AppConfig::first()->revolut_pk)->
-            post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $event->price]);
+            $res = Http::withoutVerifying()->withToken(AppConfig::first()->revolut_pk)->
+            post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $ticket->price]);
+            Log::channel('stderr')->error(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture');
             if (!$res->ok()) {
                 return response()->json(["message" => "payment_failed"], 403);
             }
@@ -655,8 +656,11 @@ class EventController extends Controller
 
         $event_user->scanned = true;
         $event_user->save();
+        $ticket = PriceCategory::where("id", "=", $event_user->ticket_id)->get();
+        Log::channel('stderr')->error($ticket->toJson());
         return response()->json([
             "is_invited" => true,
+            "ticket" => $ticket,
             "user" => new UserResource($user)
         ]);
     }

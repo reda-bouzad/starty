@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+
 /**
  * App\Http\Requests
  * @property string|null $firstname
@@ -35,8 +36,8 @@ class ProfileRequest extends FormRequest
     public function rules()
     {
         return [
-            "firstname" => "sometimes|string|max:255",
-            "lastname" => "sometimes|string|max:255",
+            "firstname" => "required|string|max:255",
+            "lastname" => "required|string|max:255",
             "email" => [
                 "sometimes",
                 'email',
@@ -46,13 +47,14 @@ class ProfileRequest extends FormRequest
                     ->ignore(\Auth::id())
             ],
             "pseudo" => [
-                "sometimes",
+                'required',
                 'string',
                 Rule::unique('users', 'pseudo')
                     ->whereNotNull('firstname')
                     ->whereNotNull('lastname')
                     ->ignore(\Auth::id()),],
             "gender" => "sometimes|in:M,F",
+            "show_pseudo_only" => "required|boolean",
             "birth_date" => "sometimes|date",
             "phone_number" => [
                 "sometimes",

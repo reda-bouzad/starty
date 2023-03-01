@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Laravel\Nova\Nova;
-use MatanYadaev\EloquentSpatial\SpatialBuilder;
 use MatanYadaev\EloquentSpatial\Objects\Point;
-use MatanYadaev\EloquentSpatial\Objects\Polygon;
+use MatanYadaev\EloquentSpatial\SpatialBuilder;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -23,6 +24,9 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property  string devise
  * @property  string type
  * @property  bool|null pricy
+ * @property Carbon start_at
+ * @property Carbon end_at
+ * @property Carbon|null $created_at
  * @property \MatanYadaev\EloquentSpatial\Objects\Point|null $location
  * @property \MatanYadaev\EloquentSpatial\Objects\Geometry|null $area
  * @method static SpatialBuilder|Event newModelQuery()
@@ -42,7 +46,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @method static SpatialBuilder|Event whereWithin(string $column, \MatanYadaev\EloquentSpatial\Objects\Geometry|string $geometryOrColumn)
  * @method static SpatialBuilder|Event withDistance(string $column, \MatanYadaev\EloquentSpatial\Objects\Geometry|string $geometryOrColumn, string $alias = 'distance')
  * @method static SpatialBuilder|Event withDistanceSphere(string $column, \MatanYadaev\EloquentSpatial\Objects\Geometry|string $geometryOrColumn, string $alias = 'distance')
- * @mixin \Eloquent
+ * @mixin Eloquent
+ * @mixin Builder
  * @property-read mixed $images
  * @property-read \Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection|\Spatie\MediaLibrary\MediaCollections\Models\Media[] $media
  * @property-read int|null $media_count
@@ -51,9 +56,10 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class Party extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
-    protected $table="events";
-    protected $appends = ['thumb','first_image','first_participants'];
-    protected  $with = ['media'];
+
+    protected $table = "events";
+    protected $appends = ['thumb', 'first_image', 'first_participants'];
+    protected $with = ['media'];
 
     protected $guarded = [];
     protected $hidden = ['media'];
@@ -70,16 +76,16 @@ class Party extends Model implements HasMedia
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope(function($query){
-          $query
-              ->whereHas('user')
-              ->when(!Nova::check(request()) && \Auth::user(),function(Builder $query){
-                $query->whereNotIn('events.id',\Auth::user()->blocked_event ?? []);
-                $query->whereNotIn('events.user_id',\Auth::user()->blocked_user ?? []);
-          });
+        static::addGlobalScope(function ($query) {
+            $query
+                ->whereHas('user')
+                ->when(!Nova::check(request()) && \Auth::user(), function (Builder $query) {
+                    $query->whereNotIn('events.id', \Auth::user()->blocked_event ?? []);
+                    $query->whereNotIn('events.user_id', \Auth::user()->blocked_user ?? []);
+                });
         });
-        self::saving(function($model){
-            if($model->uuid === null){
+        self::saving(function ($model) {
+            if ($model->uuid === null) {
                 $model->uuid = Str::uuid();
             }
         });
@@ -92,6 +98,7 @@ class Party extends Model implements HasMedia
         $this->addMediaCollection('first_image')->singleFile();
         $this->addMediaCollection('qr_code')->singleFile();
     }
+
     public function registerMediaConversions(Media $media = null): void
     {
         $this->addMediaConversion('thumb')
@@ -100,7 +107,8 @@ class Party extends Model implements HasMedia
             ->performOnCollections('first_image');
     }
 
-    public function addPriceCategories(PriceCategory $priceCategories){
+    public function addPriceCategories(PriceCategory $priceCategories)
+    {
 
     }
 
@@ -112,8 +120,9 @@ class Party extends Model implements HasMedia
         ])->all();
     }
 
-    public function price_categories(){
-        return $this->hasMany(PriceCategory::class,'event_id');
+    public function price_categories()
+    {
+        return $this->hasMany(PriceCategory::class, 'event_id');
     }
 
 
@@ -121,6 +130,7 @@ class Party extends Model implements HasMedia
     {
         return $this->getMedia('first_image')->map->getUrl('thumb')->first();
     }
+
     public function getFirstImageAttribute()
     {
         return $this->getFirstMediaUrl('first_image');
@@ -140,97 +150,105 @@ class Party extends Model implements HasMedia
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id')
-            ->select(['id','firstname','lastname'])
-            ->withCount('followers','follows');
+            ->select(['id', 'firstname', 'lastname', 'show_pseudo_only', 'pseudo'])
+            ->withCount('followers', 'follows');
     }
 
     public function participants()
     {
-        return $this->belongsToMany(User::class,'event_participants', 'event_id','user_id')
+        return $this->belongsToMany(User::class, 'event_participants', 'event_id', 'user_id')
             ->using(EventParticipant::class)
-            ->select('users.id','lastname','firstname')
+            ->select('users.id', 'lastname', 'firstname')
             ->withCount('followers')
-            ->orderByPivot('accepted','desc')
-            ->wherePivot('payment_processing',false)
-            ->withPivot(['scanned','accepted','rejected','payment_intent_id','payment_processing']);
+            ->orderByPivot('accepted', 'desc')
+            ->wherePivot('payment_processing', false)
+            ->withPivot(['scanned', 'accepted', 'rejected', 'payment_intent_id', 'payment_processing']);
     }
 
     public function acceptedParticipants()
     {
-        return $this->belongsToMany(User::class,'event_participants','event_id','user_id')
+        return $this->belongsToMany(User::class, 'event_participants', 'event_id', 'user_id')
             ->using(EventParticipant::class)
-            ->select('users.id','lastname','firstname')
+            ->select('users.id', 'lastname', 'firstname')
             ->withCount('followers')
-            ->wherePivot('accepted',true)
-            ->wherePivot('payment_processing',false)
-            ->withPivot(['scanned','accepted','rejected','payment_intent_id','payment_processing']);
+            ->wherePivot('accepted', true)
+            ->wherePivot('payment_processing', false)
+            ->withPivot(['scanned', 'accepted', 'rejected', 'payment_intent_id', 'payment_processing']);
     }
+
     public function rejectedParticipants()
     {
-        return $this->belongsToMany(User::class,'event_participants','event_id','user_id')
+        return $this->belongsToMany(User::class, 'event_participants', 'event_id', 'user_id')
             ->using(EventParticipant::class)
-            ->select('users.id','lastname','firstname')
-            ->wherePivot('payment_processing',false)
-            ->wherePivot('rejected',true)
-            ->withPivot(['scanned','accepted','rejected','payment_intent_id','payment_processing']);
+            ->select('users.id', 'lastname', 'firstname')
+            ->wherePivot('payment_processing', false)
+            ->wherePivot('rejected', true)
+            ->withPivot(['scanned', 'accepted', 'rejected', 'payment_intent_id', 'payment_processing']);
     }
+
     public function requestedParticipants()
     {
-        return $this->belongsToMany(User::class,'event_participants','event_id','user_id')
+        return $this->belongsToMany(User::class, 'event_participants', 'event_id', 'user_id')
             ->using(EventParticipant::class)
-            ->select('users.id','lastname','firstname')
-            ->wherePivot('payment_processing',false)
-            ->wherePivot('accepted',false);
+            ->select('users.id', 'lastname', 'firstname')
+            ->wherePivot('payment_processing', false)
+            ->wherePivot('accepted', false);
     }
 
     public function scannedParticipants()
     {
-        return $this->belongsToMany(User::class,'event_participants','event_id','user_id')
+        return $this->belongsToMany(User::class, 'event_participants', 'event_id', 'user_id')
             ->using(EventParticipant::class)
-            ->wherePivot('scanned',true)
-            ->withPivot(['scanned','accepted','rejected']);
+            ->wherePivot('scanned', true)
+            ->withPivot(['scanned', 'accepted', 'rejected']);
 //            ->wherePivot('accepted',true);
     }
 
-    public function likes(){
-        return $this->belongsToMany(User::class,'event_likes','event_id','user_id');
+    public function likes()
+    {
+        return $this->belongsToMany(User::class, 'event_likes', 'event_id', 'user_id');
     }
 
-    public function generateQrcode(){
+    public function generateQrcode()
+    {
         $this->addMediaFromBase64(
             base64_encode(QrCode::format('png')
                 ->style('square')
                 ->size(512)
-                ->generate(Str::substr($this->uuid,0,10))
+                ->generate(Str::substr($this->uuid, 0, 10))
             ),
             'image/png'
-            )
-            ->usingFileName($this->uuid.".png")
+        )
+            ->usingFileName($this->uuid . ".png")
             ->toMediaCollection('qr_code');
     }
 
-    public function getFirstParticipantsAttribute(){
-        return  $this->acceptedParticipants()
+    public function getFirstParticipantsAttribute()
+    {
+        return $this->acceptedParticipants()
             ->limit(3)
             ->select('users.id')
             ->get();
     }
 
-    public function eventChat(){
-        return $this->belongsTo(Chat::class,'chat_id');
-    }
-
-     public function reports()
+    public function eventChat()
     {
-        return $this->morphToMany(Report::class, 'model','model_report');
+        return $this->belongsTo(Chat::class, 'chat_id');
     }
 
-    public function reviews(){
-        return $this->hasMany(Review::class,'event_id');
+    public function reports()
+    {
+        return $this->morphToMany(Report::class, 'model', 'model_report');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'event_id');
 
     }
 
-    public function eventParticipants(){
-        return $this->hasMany(EventParticipant::class,'event_id');
+    public function eventParticipants()
+    {
+        return $this->hasMany(EventParticipant::class, 'event_id');
     }
 }

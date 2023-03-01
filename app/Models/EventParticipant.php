@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
@@ -17,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property int $id
  * @property int $user_id
  * @property int $event_id
+ * @property int $ticket_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Party $event
@@ -35,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class EventParticipant extends Pivot
 {
     use HasFactory;
+
     protected $table = "event_participants";
     protected $casts = [
         "scanned" => "boolean",
@@ -54,9 +54,10 @@ class EventParticipant extends Pivot
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public static function  getElement( int $event_id, int $user_id){
-        return EventParticipant::query()->where('event_id',$event_id)
-            ->where('user_id',$user_id)
-            ->first();
+    public static function getElement(int $event_id, int $user_id, int $ticket_id)
+    {
+        return EventParticipant::query()->where('event_id', $event_id)
+            ->where('ticket_id', $ticket_id)
+            ->where('user_id', $user_id)->first();
     }
 }
