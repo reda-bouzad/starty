@@ -15,6 +15,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -55,6 +56,7 @@ class PaymentController extends Controller
             $res = $this->getRes($event, $price, false);
         }
 
+        Log::channel('stderr')->error($res->json());
 
         if ($res->status() != 201) {
             response()->json(["message" => "server_error"], 500);

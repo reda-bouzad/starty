@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|EventLike newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventLike newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventLike query()
- * @mixin \Eloquent
  * @property int $id
  * @property int $user_id
  * @property int $event_id
@@ -22,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|EventLike whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EventLike whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EventLike whereUserId($value)
+ * @mixin \Eloquent
  */
 class EventLike extends Model
 {

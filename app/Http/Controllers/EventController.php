@@ -506,8 +506,8 @@ class EventController extends Controller
             "event_id" => $event->id,
             "user_id" => $user
         ])->first();
-        
-        $ticket = PriceCategory::where('id', '=', $event_participant->ticket_id)->get()->first();
+        error_log($event_participant->id);
+        $ticket = PriceCategory::where(['id' => $event_participant->ticket_id])->first();
 
         if ($event_participant->payment_intent_id) {
             $res = Http::withoutVerifying()->withToken(AppConfig::first()->revolut_pk)->

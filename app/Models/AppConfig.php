@@ -29,6 +29,16 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereUpdatedAt($value)
+ * @property float $commission
+ * @property string|null $stripe_pk
+ * @property int $android_build
+ * @property int $ios_build
+ * @property string|null $revolut_pk
+ * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereAndroidBuild($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereCommission($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereIosBuild($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereRevolutPk($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereStripePk($value)
  * @mixin \Eloquent
  */
 class AppConfig extends Model implements  HasMedia

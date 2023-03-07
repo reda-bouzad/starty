@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant query()
- * @mixin \Eloquent
  * @property int $id
  * @property int $user_id
  * @property int $event_id
@@ -30,6 +29,16 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property bool $accepted
  * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant whereAccepted($value)
  * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant whereScanned($value)
+ * @property bool $rejected
+ * @property string|null $payment_intent_id
+ * @property bool $payment_processing
+ * @property string|null $status
+ * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant wherePaymentIntentId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant wherePaymentProcessing($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant whereRejected($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|EventParticipant whereTicketId($value)
+ * @mixin \Eloquent
  */
 class EventParticipant extends Pivot
 {

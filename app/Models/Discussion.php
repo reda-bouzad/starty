@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * App\Models\Discussion
  *
- * @method static \Illuminate\Database\Eloquent\Builder|Discussion newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Discussion newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Discussion query()
+ * @method static Builder|Discussion newModelQuery()
+ * @method static Builder|Discussion newQuery()
+ * @method static Builder|Discussion query()
  * @mixin \Eloquent
  */
 class Discussion extends Model

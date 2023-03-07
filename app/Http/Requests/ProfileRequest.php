@@ -47,14 +47,14 @@ class ProfileRequest extends FormRequest
                     ->ignore(\Auth::id())
             ],
             "pseudo" => [
-                'required',
+                'required_if:show_pseudo_only,==,1',
                 'string',
                 Rule::unique('users', 'pseudo')
                     ->whereNotNull('firstname')
                     ->whereNotNull('lastname')
                     ->ignore(\Auth::id()),],
             "gender" => "sometimes|in:M,F",
-            "show_pseudo_only" => "required|boolean",
+            "show_pseudo_only" => "sometimes|boolean",
             "birth_date" => "sometimes|date",
             "phone_number" => [
                 "sometimes",

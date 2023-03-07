@@ -22,6 +22,9 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static \Illuminate\Database\Eloquent\Builder|ChatUser whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ChatUser whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ChatUser whereUserId($value)
+ * @property string $state
+ * @property-read \App\Models\Chat $chat
+ * @method static \Illuminate\Database\Eloquent\Builder|ChatUser whereState($value)
  * @mixin \Eloquent
  */
 class ChatUser extends Pivot

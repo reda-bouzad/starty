@@ -18,7 +18,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder|Chat newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Chat newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Chat query()
- * @mixin \Eloquent
  * @property int $id
  * @property string|null $deleted_at
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -54,6 +53,13 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read int|null $media_count
  * @method static Builder|Chat whereCreatedBy($value)
  * @method static Builder|Chat whereState($value)
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $directMembers
+ * @property-read int|null $direct_members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $requestMembers
+ * @property-read int|null $request_members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $directMembers
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $requestMembers
+ * @mixin \Eloquent
  */
 class Chat extends Model implements  HasMedia
 {

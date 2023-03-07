@@ -18,7 +18,6 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage query()
- * @mixin \Eloquent
  * @property int $id
  * @property int $chat_id
  * @property int $sender
@@ -40,6 +39,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property int|null $response_to
  * @property-read ChatMessage|null $responseToMessage
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereResponseTo($value)
+ * @mixin \Eloquent
  */
 class ChatMessage extends Model implements HasMedia
 {
