@@ -510,7 +510,7 @@ class EventController extends Controller
         $ticket = PriceCategory::where(['id' => $event_participant->ticket_id])->first();
 
         if ($event_participant->payment_intent_id) {
-            $res = Http::withoutVerifying()->withToken(AppConfig::first()->revolut_pk)->
+            $res = Http::withToken(AppConfig::first()->revolut_pk)->
             post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $ticket->price]);
             Log::channel('stderr')->error(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture');
             if (!$res->ok()) {
