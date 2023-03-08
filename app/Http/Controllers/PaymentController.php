@@ -36,14 +36,14 @@ class PaymentController extends Controller
         if (Auth::user()?->revolut_customer_id) {
             $res = $this->getRes($event, $priceCategory);
         } else if (Auth::user()?->email) {
-            $res_cus_c = Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "customers", [
+            $res_cus_c = Http::withoutVerifying()->withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "customers", [
                 "email" => Auth::user()->email,
                 "full_name" => Auth::user()->firstname . ' ' . Auth::user()->lastname,
                 "phone" => Auth::user()?->phone_number
             ]);
             if ($res_cus_c->status() != 201) {
                 if ($res_cus_c->json('code') == 1018) {
-                    $cus = Http::withToken(AppConfig::first()->revolut_pk)->get(env('REVOLUT_BASE_URL') . "customers");
+                    $cus = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->get(env('REVOLUT_BASE_URL') . "customers");
                     $id = collect($cus->object())->firstWhere(fn($x) => $x->email == Auth::user()->email)->id;
                     User::where(["id" => Auth::id()])->update(["revolut_customer_id" => $id]);
                 } else {
@@ -100,7 +100,7 @@ class PaymentController extends Controller
             $event_participant = EventParticipant::getElement($event, Auth::id(), $ticket_id);
 
 
-            $res = Http::withToken(AppConfig::first()->revolut_pk)->get(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id);
+            $res = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->get(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id);
 
 
             if ($event_participant) {
@@ -135,7 +135,7 @@ class PaymentController extends Controller
         switch ($request->get('event')) {
             case "ORDER_COMPLETED":
             {
-                $res = Http::withToken(AppConfig::first()->revolut_pk)->
+                $res = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->
                 get(env('REVOLUT_BASE_URL') . "orders/" . $request->get('order_id'));
 
 
@@ -150,7 +150,7 @@ class PaymentController extends Controller
             case "ORDER_PAYMENT_DECLINED":
             case "ORDER_PAYMENT_FAILED":
             {
-                $res = Http::withToken(AppConfig::first()->revolut_pk)->
+                $res = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->
                 post(env('REVOLUT_BASE_URL') . "orders/" . $request->get('order_id') . "/cancel");
                 if ($res->ok()) {
                     EventParticipant::where(["payment_intent_id" => $request->get('order_id')])->delete();
@@ -177,7 +177,7 @@ class PaymentController extends Controller
     {
         \Log::write("error", env('REVOLUT_BASE_URL') . "orders");
         if ($with_customer_id) {
-            return Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders", [
+            return Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders", [
                 "amount" => $price->price * 100,
                 "description" => 'événement "' . $event->label . '" pour "' . $event->user->firstname . ' ' . $event->user->lastname . '"',
                 "currency" => $price->devise,
@@ -190,7 +190,7 @@ class PaymentController extends Controller
                 ]
             ]);
         } else {
-            return Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders", [
+            return Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders", [
                 "amount" => $event->price * 100,
                 "description" => 'événement "' . $event->label . '" pour "' . $event->user->firstname . ' ' . $event->user->lastname . '"',
                 "currency" => $event->devise,

@@ -477,12 +477,12 @@ class EventController extends Controller
         if ($event->pricy && $event_participant->payment_intent_id) {
 
             if ($event_participant->accepted) {
-                $res = Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/refund');
+                $res = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/refund');
                 if (!$res->ok()) {
                     return response()->json(["message" => "refund_contact_admin"], 403);
                 }
             }
-            Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/cancel');
+            Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/cancel');
         }
         $event->participants()->detach(Auth::id());
 
@@ -510,7 +510,7 @@ class EventController extends Controller
         $ticket = PriceCategory::where(['id' => $event_participant->ticket_id])->first();
 
         if ($event_participant->payment_intent_id) {
-            $res = Http::withToken(AppConfig::first()->revolut_pk)->
+            $res = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->
             post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture', ["amount" => $ticket->price]);
             Log::channel('stderr')->error(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/capture');
             if (!$res->ok()) {
@@ -552,12 +552,12 @@ class EventController extends Controller
         ])->first();
         if ($event->pricy && $event_participant->payment_intent_id) {
             if ($event_participant->accepted) {
-                $res = Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/refund');
+                $res = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/refund');
                 if (!$res->ok()) {
                     return response()->json(["message" => "refund_contact_admin"], 403);
                 }
 
-                $res = Http::withToken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/cancel');
+                $res = Http::withoutVerifying()->withtoken(AppConfig::first()->revolut_pk)->post(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id . '/cancel');
                 if (!$res->ok()) {
                     return response()->json(["message" => "refund_contact_admin"], 403);
                 }
