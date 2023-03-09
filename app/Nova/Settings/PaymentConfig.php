@@ -14,8 +14,8 @@ class PaymentConfig extends AbstractType
     public function fields(): array
     {
         return [
-            Number::make('Commission soirée payante','fee'),
-            Text::make('Stripe public key','stripe_pk')
+            Number::make('Commission soirée payante', 'fee'),
+            Text::make('Stripe public key', 'stripe_pk')
         ];
     }
 }

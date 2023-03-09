@@ -27,18 +27,18 @@ class MessageRequest extends FormRequest
 
         return [
             'to' => [
-                Rule::when($this->type=="single",[
+                Rule::when($this->type == "single", [
                     'required',
                     'integer',
-                    Rule::exists('users','id')
-                        ->whereNot('id',\Auth::id())
+                    Rule::exists('users', 'id')
+                        ->whereNot('id', \Auth::id())
                 ],)
             ],
-            'response_to' => ['sometimes',Rule::exists('chat_messages','id')->where('chat_id',$this->route('chat'))],
-            'from_message_id' =>['sometimes',Rule::exists('chat_messages','id')],
+            'response_to' => ['sometimes', Rule::exists('chat_messages', 'id')->where('chat_id', $this->route('chat'))],
+            'from_message_id' => ['sometimes', Rule::exists('chat_messages', 'id')],
             'content' => 'sometimes',
-            'files' => ['sometimes',Rule::requiredIf(function(){
-               return  $this->content ===null && $this->from_message_id === null;
+            'files' => ['sometimes', Rule::requiredIf(function () {
+                return $this->content === null && $this->from_message_id === null;
             })]
         ];
     }

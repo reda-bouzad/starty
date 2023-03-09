@@ -1,11 +1,10 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-
-
 
 
 /**
@@ -30,24 +29,30 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @method static Builder|ModelReport whereUserId($value)
  * @mixin \Eloquent
  */
-class ModelReport extends Pivot {
-     use HasFactory;
-     public $timestamps = false;
-     protected $guarded = [];
+class ModelReport extends Pivot
+{
+    use HasFactory;
 
-     public function reportable()
+    public $timestamps = false;
+    protected $guarded = [];
+
+    public function reportable()
     {
         return $this->morphTo();
     }
 
-    public function report(){
-        return $this->belongsTo(Report::class,'report_id');
+    public function report()
+    {
+        return $this->belongsTo(Report::class, 'report_id');
     }
 
-    public function user(){
-         return $this->belongsTo(User::class,'model_id');
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'model_id');
     }
-    public function event(){
-         return $this->belongsTo(Party::class,'model_id');
+
+    public function event()
+    {
+        return $this->belongsTo(Party::class, 'model_id');
     }
 }

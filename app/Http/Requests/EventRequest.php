@@ -42,7 +42,7 @@ class EventRequest extends FormRequest
             'type' => 'required|string|in:public,private',
             'contact' => 'required|string|max:255',
             'pricy' => 'required|boolean',
-            'price_categories'=>'required_if:pricy,==,1|array',
+            'price_categories' => 'required_if:pricy,==,1|array',
             'price' => 'required_if:pricy,==,1',
             'nb_participants' => 'required|integer',
             'start_at' => 'required',
@@ -53,7 +53,7 @@ class EventRequest extends FormRequest
             'description' => 'sometimes',
             'address' => 'sometimes',
             'devise' => 'sometimes',
-            'phone_number' =>'sometimes'
+            'phone_number' => 'sometimes'
         ];
     }
 }

@@ -20,7 +20,7 @@ class SendGroupCreateEventJob implements ShouldQueue
      * @var Chat
      */
     private Chat $chat;
-    private  Collection $otherMember;
+    private Collection $otherMember;
 
     /**
      * Create a new job instance.
@@ -41,6 +41,6 @@ class SendGroupCreateEventJob implements ShouldQueue
      */
     public function handle()
     {
-        $this->otherMember->each(fn($el) => event(new NewChat($this->chat,$el)));
+        $this->otherMember->each(fn($el) => event(new NewChat($this->chat, $el)));
     }
 }

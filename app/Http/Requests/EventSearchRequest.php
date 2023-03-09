@@ -30,8 +30,8 @@ class EventSearchRequest extends FormRequest
             'radius' => 'sometimes|integer',
             'start' => 'sometimes|date',
             "end" => 'sometimes|date',
-            'type' => ['sometimes',Rule::in(['private','public'])],
-            'pricy' => ['sometimes','boolean']
+            'type' => ['sometimes', Rule::in(['private', 'public'])],
+            'pricy' => ['sometimes', 'boolean']
         ];
     }
 }

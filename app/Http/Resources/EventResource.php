@@ -25,7 +25,7 @@ class EventResource extends JsonResource
             "pricy" => $this->pricy,
             "price" => $this->price,
             "nb_participants" => $this->nb_participants,
-            "remaining_participants" => $this->remaining_participants,
+            "remaining_participants" => $this->nb_participants - $this->participants()->count(),
             "contact" => $this->contact,
             "start_at" => $this->start_at,
             "end_at" => $this->end_at,

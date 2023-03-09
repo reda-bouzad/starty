@@ -10,14 +10,14 @@ class ChatMessageResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
     public function toArray($request)
     {
         return array_filter([
             "id" => $this->id,
-            "chat_id" =>  $this->chat_id,
+            "chat_id" => $this->chat_id,
             "sender_id" => $this->sender,
             "receiver_id" => $this->receiver,
             "sender" => new UserResource($this->whenLoaded('userSender')),

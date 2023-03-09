@@ -23,6 +23,7 @@ class NewChat implements ShouldBroadcast
         $this->chat = $chat;
         $this->receiver_id = $receiver_id;
     }
+
     public function broadcastAs()
     {
         return 'update.chat';
@@ -35,14 +36,14 @@ class NewChat implements ShouldBroadcast
             ->withLastMessageId()
             ->with([
                 'lastMessage',
-                'members' => function($query){
-                    $query->select('users.id','firstname','lastname');
+                'members' => function ($query) {
+                    $query->select('users.id', 'firstname', 'lastname');
                 }
             ])
             ->withCount('members')
             ->find($this->chat->id);
 
-        return  array_merge(json_decode((new ChatResource($chat))->toJson(),true),["unread" => $chat->getUnread($this->receiver_id)]);
+        return array_merge(json_decode((new ChatResource($chat))->toJson(), true), ["unread" => $chat->getUnread($this->receiver_id)]);
     }
 
     /**
@@ -52,7 +53,7 @@ class NewChat implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('chat.'.$this->receiver_id);
+        return new PrivateChannel('chat.' . $this->receiver_id);
     }
 
 }

@@ -39,9 +39,10 @@ class AccountUpdate
     {
 
         return [
-            "stripe_account_status" => User::select(['id','stripe_account_status'])->find($this->user_id)->stripe_account_status
+            "stripe_account_status" => User::select(['id', 'stripe_account_status'])->find($this->user_id)->stripe_account_status
         ];
     }
+
     /**
      * Get the channels the event should broadcast on.
      *

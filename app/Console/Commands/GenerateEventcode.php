@@ -31,10 +31,10 @@ class GenerateEventcode extends Command
     {
         $id = $this->option('id');
         Party::query()
-            ->when($id, fn($query)=>$query->where('id',$id))
-            ->get(['id','uuid'])
-            ->each(function(Party $event){
-                if($event->uuid == null){
+            ->when($id, fn($query) => $query->where('id', $id))
+            ->get(['id', 'uuid'])
+            ->each(function (Party $event) {
+                if ($event->uuid == null) {
                     $event->uuid = Str::uuid();
                     $event->save();
                 }

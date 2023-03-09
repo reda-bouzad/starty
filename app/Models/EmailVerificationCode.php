@@ -26,5 +26,6 @@ use Illuminate\Database\Eloquent\Model;
 class EmailVerificationCode extends Model
 {
     use HasFactory;
+
     protected $guarded = [];
 }

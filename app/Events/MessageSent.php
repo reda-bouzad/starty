@@ -20,6 +20,7 @@ class MessageSent implements ShouldBroadcast
     {
         $this->chatMessage = $chatMessage;
     }
+
     public function broadcastAs()
     {
         return 'new.message';
@@ -28,7 +29,7 @@ class MessageSent implements ShouldBroadcast
     public function broadcastWith()
     {
 
-        return json_decode((new ChatMessageResource($this->chatMessage))->toJson(),true);
+        return json_decode((new ChatMessageResource($this->chatMessage))->toJson(), true);
     }
 
     /**
@@ -38,7 +39,7 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('message.'.$this->chatMessage->chat_id);
+        return new PrivateChannel('message.' . $this->chatMessage->chat_id);
     }
 
 }

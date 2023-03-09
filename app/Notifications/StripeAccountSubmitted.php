@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\App;
 use NotificationChannels\Fcm\FcmChannel;
 
-class StripeAccountSubmitted extends Notification implements  ShouldQueue
+class StripeAccountSubmitted extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -25,13 +25,13 @@ class StripeAccountSubmitted extends Notification implements  ShouldQueue
     {
         $this->state = $state;
 
-        $this->title =[
-            "fr" =>  'Demande envoyé',
+        $this->title = [
+            "fr" => 'Demande envoyé',
             "en" => 'Application submitted'
         ];
         $this->content = [
             "fr" => "Fecilitation vos informations ont été soumis à Stripe notre partenaire de paiement sécurisé, et votre compte de paiement est en attente de validation.",
-            "en" =>"Congratualation, your application has been submitted to Stripe our secure payment partner, and your payment account will be review for validation"
+            "en" => "Congratualation, your application has been submitted to Stripe our secure payment partner, and your payment account will be review for validation"
         ];
 //        dd($this->title, $this->content, $this->data);
     }
@@ -39,18 +39,18 @@ class StripeAccountSubmitted extends Notification implements  ShouldQueue
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return [FcmChannel::class,'database'];
+        return [FcmChannel::class, 'database'];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      */
     public function toFcm($notifiable)
     {
@@ -60,7 +60,7 @@ class StripeAccountSubmitted extends Notification implements  ShouldQueue
                 "stripe_account_status" => $this->state
             ]
         ];
-        return   FcmMessage::create()
+        return FcmMessage::create()
             ->setData(["data" => json_encode($this->data)])
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
@@ -71,7 +71,7 @@ class StripeAccountSubmitted extends Notification implements  ShouldQueue
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)

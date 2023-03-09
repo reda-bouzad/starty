@@ -72,7 +72,6 @@ class AuthController extends Controller
      */
     public function updateProfile(ProfileRequest $profileRequest): JsonResponse
     {
-        Log::channel('stderr')->error($profileRequest);
         $user = Auth::user();
         $location = null;
         if ($profileRequest->lat && $profileRequest->long) {

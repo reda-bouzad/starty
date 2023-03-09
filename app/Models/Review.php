@@ -32,9 +32,11 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class Review extends Pivot
 {
     use HasFactory;
-    protected $table  = "reviews";
 
-    public  function user(){
+    protected $table = "reviews";
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 }

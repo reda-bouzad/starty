@@ -34,8 +34,8 @@ class NewEventNotification extends Notification implements ShouldQueue
         $this->event = $event;
 
 
-        $this->title =[
-            "fr" =>  'Nouvelle soirée prêt de chez vous',
+        $this->title = [
+            "fr" => 'Nouvelle soirée prêt de chez vous',
             "en" => 'New party around you'
         ];
         $this->content = [
@@ -48,39 +48,39 @@ class NewEventNotification extends Notification implements ShouldQueue
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return ['database',FcmChannel::class];
+        return ['database', FcmChannel::class];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      */
     public function toFcm($notifiable)
     {
         $this->data = [
             "type" => "new.events",
-            "data" => json_decode((new EventResource($this->event))->toJson(),1)
+            "data" => json_decode((new EventResource($this->event))->toJson(), 1)
         ];
-        return     FcmMessage::create()
-        ->setData(["data" => json_encode($this->data)])
-        ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
-            ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
-            ->setImage($this->event->thumb)
-            ->setBody($this->content[$notifiable->lang ?? App::getLocale()])
-        );
+        return FcmMessage::create()
+            ->setData(["data" => json_encode($this->data)])
+            ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
+                ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
+                ->setImage($this->event->thumb)
+                ->setBody($this->content[$notifiable->lang ?? App::getLocale()])
+            );
 
     }
 
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)
@@ -88,11 +88,11 @@ class NewEventNotification extends Notification implements ShouldQueue
 
         $this->data = [
             "type" => "new.events",
-            "data" => json_decode((new EventResource($this->event))->toJson(),1)
+            "data" => json_decode((new EventResource($this->event))->toJson(), 1)
         ];
         return array_merge([
             "title" => $this->title,
             "content" => $this->content,
-            ], $this->data);
+        ], $this->data);
     }
 }

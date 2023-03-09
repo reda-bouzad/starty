@@ -31,9 +31,11 @@ class ChatUser extends Pivot
 {
     protected $table = "chat_users";
     use HasFactory;
+
     protected $guarded = [];
 
-    public function chat(){
-        return $this->belongsTo(Chat::class,'chat_id');
+    public function chat()
+    {
+        return $this->belongsTo(Chat::class, 'chat_id');
     }
 }

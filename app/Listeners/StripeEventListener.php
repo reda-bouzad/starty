@@ -29,45 +29,45 @@ class StripeEventListener
     /**
      * Handle the event.
      *
-     * @param  object  $event
+     * @param object $event
      * @return void
      */
     public function handle(WebhookReceived $event)
     {
 
-        \Log::info("stripe webhook: ".$event->payload['type']);
-        if($event->payload['type'] === "account.updated"){
+        \Log::info("stripe webhook: " . $event->payload['type']);
+        if ($event->payload['type'] === "account.updated") {
             $data = $event->payload['data']['object'];
             $metadata = $data['metadata'];
 
-            if(Arr::get($metadata,'starty_user_id')){
+            if (Arr::get($metadata, 'starty_user_id')) {
                 $user = User::find($metadata['starty_user_id']);
                 $user->stripe_merchant_country = $data['country'];
 
-                if($data['payouts_enabled']) {
-                    if($user->stripe_account_status === "enable") return;
+                if ($data['payouts_enabled']) {
+                    if ($user->stripe_account_status === "enable") return;
                     $user->stripe_account_status = "enable";
                     $user->notify(new AccountValidateNotification($user->stripe_account_status));
-                }elseif(count($data['requirements']['errors'])>0 || count($data['requirements']['eventually_due'])>0){
+                } elseif (count($data['requirements']['errors']) > 0 || count($data['requirements']['eventually_due']) > 0) {
                     $previous = $user->stripe_account_stats;
                     $user->stripe_account_status = "action_required";
-                    if($previous !==  null){
+                    if ($previous !== null) {
                         $user->notify(new AccountRequiredActionNotification($user->stripe_account_status));
                     }
-                } elseif ($data['details_submitted']){
-                    if($user->stripe_account_status === "processed") return;
+                } elseif ($data['details_submitted']) {
+                    if ($user->stripe_account_status === "processed") return;
                     $user->stripe_account_status = "processed";
                     $user->notify(new StripeAccountSubmitted($user->stripe_account_status));
-                }else{
+                } else {
                     $user->stripe_account_status = "processing";
                 }
 
-            \Log::info('c\'est save');
+                \Log::info('c\'est save');
                 $user->save();
                 event(new AccountUpdate($user->id));
             }
         }
-        if($event->payload['type'] === 'checkout.session.completed'){
+        if ($event->payload['type'] === 'checkout.session.completed') {
             Log::info('');
             $data = $event->payload['data']['object'];
             $metadata = $data['metadata'];

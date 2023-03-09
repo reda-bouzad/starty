@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\App;
 use NotificationChannels\Fcm\FcmChannel;
 
-class NewMessageNotification extends Notification implements  ShouldQueue
+class NewMessageNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -34,9 +34,8 @@ class NewMessageNotification extends Notification implements  ShouldQueue
         $sender_name = $this->message->userSender->lastname;
 
 
-
-        $this->title =[
-            "fr" =>  'Nouveau message',
+        $this->title = [
+            "fr" => 'Nouveau message',
             "en" => 'New message'
         ];
         $this->content = [
@@ -49,13 +48,14 @@ class NewMessageNotification extends Notification implements  ShouldQueue
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return ['database',FcmChannel::class];
+        return ['database', FcmChannel::class];
     }
+
     public function toFcm($notifiable)
     {
         \Log::info("fcm message");
@@ -63,7 +63,7 @@ class NewMessageNotification extends Notification implements  ShouldQueue
         $this->message->load('userSender:id,firstname,lastname');
         $this->data = [
             "type" => "new.message",
-            "data" => json_decode((new ChatMessageResource($this->message))->toJson(),1)
+            "data" => json_decode((new ChatMessageResource($this->message))->toJson(), 1)
         ];
 
         return FcmMessage::create()
@@ -80,9 +80,9 @@ class NewMessageNotification extends Notification implements  ShouldQueue
         $this->message->load('userSender:id,firstname,lastname');
         $this->data = [
             "type" => "new.message",
-            "data" =>json_decode((new ChatMessageResource($this->message))->toJson(),1)
+            "data" => json_decode((new ChatMessageResource($this->message))->toJson(), 1)
         ];
-        return  array_merge([
+        return array_merge([
             "title" => $this->title,
             "content" => $this->content,
         ], $this->data);

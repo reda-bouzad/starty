@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Nova;
 
 
@@ -22,7 +23,7 @@ class UserReport extends Resource
 
     public static function indexQuery(NovaRequest $request, $query)
     {
-        return parent::indexQuery($request, $query->where('model_type',\App\Models\User::class));
+        return parent::indexQuery($request, $query->where('model_type', \App\Models\User::class));
     }
 
     public static function label()
@@ -49,15 +50,15 @@ class UserReport extends Resource
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function fields(NovaRequest $request)
     {
         return [
             ID::make()->sortable(),
-            BelongsTo::make('Type de signalement','report',Report::class),
-            BelongsTo::make('Utilisateur','user',User::class)
+            BelongsTo::make('Type de signalement', 'report', Report::class),
+            BelongsTo::make('Utilisateur', 'user', User::class)
 
 
         ];
@@ -66,7 +67,7 @@ class UserReport extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -77,7 +78,7 @@ class UserReport extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -88,7 +89,7 @@ class UserReport extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -99,7 +100,7 @@ class UserReport extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function actions(NovaRequest $request)

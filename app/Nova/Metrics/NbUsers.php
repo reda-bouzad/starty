@@ -22,7 +22,7 @@ class NbUsers extends Trend
      */
     public function calculate(NovaRequest $request): TrendResult
     {
-        return $this->countByDays($request, User::where('user_type', '!=','administrator')->whereNotNull('firstname'));
+        return $this->countByDays($request, User::where('user_type', '!=', 'administrator')->whereNotNull('firstname'));
     }
 
     /**

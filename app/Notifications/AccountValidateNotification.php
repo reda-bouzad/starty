@@ -25,13 +25,13 @@ class AccountValidateNotification extends Notification implements ShouldQueue
         $this->status = $status;
 
         $this->title = [
-            "fr" =>  'Compte de paiement validé',
+            "fr" => 'Compte de paiement validé',
             "en" => 'Payment account validated'
         ];
 
         $this->content = [
             "fr" => "Felicitation vous pouvez maintenant créer des soirées payantes et percevoir votre argent.",
-            "en" =>"Congratulation, you can now create payed parties and get your money."
+            "en" => "Congratulation, you can now create payed parties and get your money."
         ];
 //        dd($this->title, $this->content, $this->data);
     }
@@ -39,18 +39,18 @@ class AccountValidateNotification extends Notification implements ShouldQueue
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return [FcmChannel::class,'database'];
+        return [FcmChannel::class, 'database'];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      */
     public function toFcm($notifiable)
     {
@@ -60,7 +60,7 @@ class AccountValidateNotification extends Notification implements ShouldQueue
                 "stripe_account_status" => $this->status
             ]
         ];
-        return   FcmMessage::create()
+        return FcmMessage::create()
             ->setData(["data" => json_encode($this->data)])
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
@@ -71,7 +71,7 @@ class AccountValidateNotification extends Notification implements ShouldQueue
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)

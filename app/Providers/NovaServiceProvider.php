@@ -53,9 +53,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 MenuSection::make('Evènements', [
                     MenuItem::resource(Event::class)
                 ])
-                ->icon('event')->collapsable(),
-                 MenuSection::make('Signalements', [
-                     MenuItem::resource(Report::class),
+                    ->icon('event')->collapsable(),
+                MenuSection::make('Signalements', [
+                    MenuItem::resource(Report::class),
                     MenuItem::resource(UserReport::class),
                     MenuItem::resource(EventReport::class)
                 ]),
@@ -92,7 +92,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function gate()
     {
         Gate::define('viewNova', function ($user) {
-            return  $user->user_type === "administrator";
+            return $user->user_type === "administrator";
         });
     }
 

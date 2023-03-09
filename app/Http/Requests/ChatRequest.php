@@ -24,9 +24,9 @@ class ChatRequest extends FormRequest
      */
     public function rules()
     {
-        return[
+        return [
             "type" => "sometimes|in:single,group",
-            "name" => [Rule::requiredIf(function(){
+            "name" => [Rule::requiredIf(function () {
                 return request()->type === "group";
             })],
 

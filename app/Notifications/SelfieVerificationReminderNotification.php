@@ -30,8 +30,8 @@ class SelfieVerificationReminderNotification extends Notification implements Sho
     {
 
 
-        $this->title =[
-            "fr" =>  "Relance!!",
+        $this->title = [
+            "fr" => "Relance!!",
             "en" => "Reminder!!"
         ];
         $this->content = [
@@ -44,23 +44,23 @@ class SelfieVerificationReminderNotification extends Notification implements Sho
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return [FcmChannel::class,'database'];
+        return [FcmChannel::class, 'database'];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      */
     public function toFcm($notifiable)
     {
 
-        return   FcmMessage::create()
+        return FcmMessage::create()
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
                 ->setBody($this->content[$notifiable->lang ?? App::getLocale()])
@@ -70,7 +70,7 @@ class SelfieVerificationReminderNotification extends Notification implements Sho
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)

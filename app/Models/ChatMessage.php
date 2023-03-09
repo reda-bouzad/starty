@@ -58,10 +58,10 @@ class ChatMessage extends Model implements HasMedia
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope(function($query){
-            $query->when(\Auth::user(),function(Builder $query){
-                    $query->whereNotIn('id',\Auth::user()->deleted_messages ?? []);
-                });
+        static::addGlobalScope(function ($query) {
+            $query->when(\Auth::user(), function (Builder $query) {
+                $query->whereNotIn('id', \Auth::user()->deleted_messages ?? []);
+            });
         });
 
     }
@@ -81,15 +81,19 @@ class ChatMessage extends Model implements HasMedia
         return $this->belongsTo(Chat::class, 'chat_id');
     }
 
-    public function userSender(){
-        return $this->belongsTo(User::class,'sender');
-    }
-    public function userReceiver(){
-        return $this->belongsTo(User::class,'receiver');
+    public function userSender()
+    {
+        return $this->belongsTo(User::class, 'sender');
     }
 
-    public function responseToMessage(){
-        return $this->belongsTo(ChatMessage::class,'response_to');
+    public function userReceiver()
+    {
+        return $this->belongsTo(User::class, 'receiver');
+    }
+
+    public function responseToMessage()
+    {
+        return $this->belongsTo(ChatMessage::class, 'response_to');
     }
 }
 

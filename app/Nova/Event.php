@@ -88,13 +88,13 @@ class Event extends Resource
             Textarea::make('Adresse', 'address'),
 
             Textarea::make('Description'),
-            Text::make('latitude','lat')->rules(['required','numeric', 'between:-90,90'])
-                ->default(fn () => optional($this->location)->latitude),
-            Text::make('longitude','long')->rules(['required','numeric', 'between:-180,180'])
-                ->default(fn () => optional($this->location)->longitude),
-            Images::make('QrCode ticket','qr_code')->readonly(),
+            Text::make('latitude', 'lat')->rules(['required', 'numeric', 'between:-90,90'])
+                ->default(fn() => optional($this->location)->latitude),
+            Text::make('longitude', 'long')->rules(['required', 'numeric', 'between:-180,180'])
+                ->default(fn() => optional($this->location)->longitude),
+            Images::make('QrCode ticket', 'qr_code')->readonly(),
             BelongsToMany::make('Participants', 'participants', User::class),
-            BelongsToMany::make('Signalement','reports',Report::class)
+            BelongsToMany::make('Signalement', 'reports', Report::class)
 
 
         ];

@@ -39,25 +39,25 @@ class SendNotificationToUsersNotification extends Notification implements Should
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return [FcmChannel::class,'database'];
+        return [FcmChannel::class, 'database'];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      */
     public function toFcm($notifiable)
     {
         $this->data = [
             "type" => "admin.notification",
         ];
-        return   FcmMessage::create()
+        return FcmMessage::create()
             ->setData(["data" => json_encode($this->data)])
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
@@ -68,7 +68,7 @@ class SendNotificationToUsersNotification extends Notification implements Should
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)

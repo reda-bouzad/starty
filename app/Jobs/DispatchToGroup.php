@@ -49,7 +49,7 @@ class DispatchToGroup implements ShouldQueue
             ->members()
 //            ->where('users.id','!=',$this->sender->id)
             ->get(['users.id'])
-            ->each(fn($el) =>   event(new NewChat($this->chat,$el->id )));
+            ->each(fn($el) => event(new NewChat($this->chat, $el->id)));
 
     }
 }

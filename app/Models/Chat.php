@@ -57,11 +57,9 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property-read int|null $direct_members_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $requestMembers
  * @property-read int|null $request_members_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $directMembers
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $requestMembers
  * @mixin \Eloquent
  */
-class Chat extends Model implements  HasMedia
+class Chat extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
@@ -81,16 +79,16 @@ class Chat extends Model implements  HasMedia
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope(function($query){
-           $query->withLastMessageId()
-                ->when(\Auth::user(),function(Builder $query){
-                    $query->whereNotIn('id',\Auth::user()->deleted_chats ?? []);
+        static::addGlobalScope(function ($query) {
+            $query->withLastMessageId()
+                ->when(\Auth::user(), function (Builder $query) {
+                    $query->whereNotIn('id', \Auth::user()->deleted_chats ?? []);
                 });
         });
 
-        static::creating(function($model){
-            if($model->created_by=== null)
-            $model->created_by = \Auth::id();
+        static::creating(function ($model) {
+            if ($model->created_by === null)
+                $model->created_by = \Auth::id();
         });
     }
 
@@ -99,40 +97,48 @@ class Chat extends Model implements  HasMedia
         return $this->hasMany(ChatMessage::class, 'chat_id');
     }
 
-    public function lastMessage(){
-        return $this->belongsTo(ChatMessage::class,'last_message_id');
+    public function lastMessage()
+    {
+        return $this->belongsTo(ChatMessage::class, 'last_message_id');
     }
 
-    public function getUnread($user_id){
-        if(!$user_id) return null;
-        return ChatMessage::where('read',false)
-            ->where('chat_id',$this->id)
+    public function getUnread($user_id)
+    {
+        if (!$user_id) return null;
+        return ChatMessage::where('read', false)
+            ->where('chat_id', $this->id)
             ->where('receiver', $user_id)
             ->count();
     }
 
-    public function members() {
-        return $this->belongsToMany(User::class,'chat_users')
+    public function members()
+    {
+        return $this->belongsToMany(User::class, 'chat_users')
             ->using(ChatUser::class)
             ->withPivot('state')
-            ->select(['users.id','firstname','lastname']);
-    }
-    public function directMembers() {
-        return $this->belongsToMany(User::class,'chat_users')
-            ->using(ChatUser::class)
-            ->wherePivot('state','direct')
-            ->select(['users.id','firstname','lastname']);
-    }
-    public function requestMembers() {
-        return $this->belongsToMany(User::class,'chat_users')
-            ->using(ChatUser::class)
-            ->wherePivot('state','request')
-            ->select(['users.id','firstname','lastname']);
+            ->select(['users.id', 'firstname', 'lastname']);
     }
 
-    public function scopeWithLastMessageId(Builder $query){
+    public function directMembers()
+    {
+        return $this->belongsToMany(User::class, 'chat_users')
+            ->using(ChatUser::class)
+            ->wherePivot('state', 'direct')
+            ->select(['users.id', 'firstname', 'lastname']);
+    }
+
+    public function requestMembers()
+    {
+        return $this->belongsToMany(User::class, 'chat_users')
+            ->using(ChatUser::class)
+            ->wherePivot('state', 'request')
+            ->select(['users.id', 'firstname', 'lastname']);
+    }
+
+    public function scopeWithLastMessageId(Builder $query)
+    {
         $query->addSelect([
-            "last_message_id" => ChatMessage::whereColumn('chats.id','chat_id')
+            "last_message_id" => ChatMessage::whereColumn('chats.id', 'chat_id')
                 ->latest()
                 ->select('id')
                 ->limit(1)
@@ -144,11 +150,13 @@ class Chat extends Model implements  HasMedia
         return $this->type === "group";
     }
 
-    public function createdBy(){
-        return $this->belongsTo(User::class,'created_by');
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function getStateAttribute(){
+    public function getStateAttribute()
+    {
         return optional(ChatUser::where([
             "chat_id" => $this->id,
             "user_id" => \Auth::id()
@@ -156,7 +164,8 @@ class Chat extends Model implements  HasMedia
 
     }
 
-    public function event(){
+    public function event()
+    {
         return $this->hasMany(Party::class);
     }
 }

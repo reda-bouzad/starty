@@ -15,6 +15,7 @@ class SelfieVerificationReminder extends Action
     use InteractsWithQueue, Queueable;
 
     public $name = "Relance Image Selfie";
+
     /**
      * Perform the action on the given models.
      *

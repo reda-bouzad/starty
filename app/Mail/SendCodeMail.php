@@ -32,7 +32,7 @@ class SendCodeMail extends Mailable implements ShouldQueue
     public function build()
     {
         return $this
-            ->markdown('email.verification',["code" => $this->code])
+            ->markdown('email.verification', ["code" => $this->code])
             ->subject(__('Email verification'));
     }
 }

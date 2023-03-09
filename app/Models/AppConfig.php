@@ -41,10 +41,11 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @method static \Illuminate\Database\Eloquent\Builder|AppConfig whereStripePk($value)
  * @mixin \Eloquent
  */
-class AppConfig extends Model implements  HasMedia
+class AppConfig extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
+
     protected $hidden = ['media'];
 
 

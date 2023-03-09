@@ -13,24 +13,25 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 class VerifyIdentityAction extends Action
 {
     use InteractsWithQueue, Queueable;
+
     public $showInline = true;
 
 
     public function name()
     {
-       return "Valider/Invalidé l'identité";
+        return "Valider/Invalidé l'identité";
     }
 
     /**
      * Perform the action on the given models.
      *
-     * @param  \Laravel\Nova\Fields\ActionFields  $fields
-     * @param  \Illuminate\Support\Collection  $models
+     * @param \Laravel\Nova\Fields\ActionFields $fields
+     * @param \Illuminate\Support\Collection $models
      * @return mixed
      */
     public function handle(ActionFields $fields, Collection $models)
     {
-        $models->each(function ($el){
+        $models->each(function ($el) {
             $el->is_verified = !$el->is_verified;
             $el->save();
         });
@@ -39,7 +40,7 @@ class VerifyIdentityAction extends Action
     /**
      * Get the fields available on the action.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function fields(NovaRequest $request)

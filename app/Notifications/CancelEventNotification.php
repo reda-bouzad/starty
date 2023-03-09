@@ -31,8 +31,8 @@ class CancelEventNotification extends Notification implements ShouldQueue
         $this->event = $event;
 
 
-        $this->title =[
-            "fr" =>  'Soirée annulée',
+        $this->title = [
+            "fr" => 'Soirée annulée',
             "en" => 'Party Cancel'
         ];
         $this->content = [
@@ -45,26 +45,26 @@ class CancelEventNotification extends Notification implements ShouldQueue
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return [FcmChannel::class,'database'];
+        return [FcmChannel::class, 'database'];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      */
     public function toFcm($notifiable)
     {
         $this->data = [
             "type" => "join.events",
-            "data" => json_decode((new EventResource($this->event))->toJson(),1)
+            "data" => json_decode((new EventResource($this->event))->toJson(), 1)
         ];
-        return   FcmMessage::create()
+        return FcmMessage::create()
             ->setData(["data" => json_encode($this->data)])
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
@@ -75,14 +75,14 @@ class CancelEventNotification extends Notification implements ShouldQueue
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)
     {
         $this->data = [
             "type" => "join.events",
-            "data" => json_decode((new EventResource($this->event))->toJson(),1)
+            "data" => json_decode((new EventResource($this->event))->toJson(), 1)
         ];
         return array_merge([
             "title" => $this->title,

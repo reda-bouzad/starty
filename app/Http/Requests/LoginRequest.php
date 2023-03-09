@@ -25,7 +25,7 @@ class LoginRequest extends FormRequest
     public function rules()
     {
         return [
-            "firebase_token" =>[
+            "firebase_token" => [
                 "required",
                 new VerifyTelNumberRule(true)
             ],

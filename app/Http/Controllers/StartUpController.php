@@ -7,12 +7,13 @@ use Illuminate\Http\Request;
 
 class StartUpController extends Controller
 {
-    public function getStartUps(){
-        return User::select(["id","lastname","firstname","description","is_verified"])
-            ->withCount(['followers','follows'])
+    public function getStartUps()
+    {
+        return User::select(["id", "lastname", "firstname", "description", "is_verified"])
+            ->withCount(['followers', 'follows'])
             ->whereNotNull('firstname')
             ->whereNotNull('lastname')
-            ->where('user_type','!=','administrator')
+            ->where('user_type', '!=', 'administrator')
             ->withCount('events')
             ->orderByDesc('is_verified')
             ->orderByDesc('events_count')

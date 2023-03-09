@@ -41,7 +41,8 @@ class User extends Resource
      */
     public static $title = 'fullname';
 
-    public static function label() {
+    public static function label()
+    {
         return "Utilisateurs";
     }
 
@@ -63,22 +64,22 @@ class User extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'firstname', 'lastname', 'email','phone_number'
+        'id', 'firstname', 'lastname', 'email', 'phone_number'
     ];
 
     /**
      * Get the fields displayed by the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function fields(NovaRequest $request)
     {
         return [
             ID::make()->sortable(),
-            Boolean::make('Compte vérifié ?','is_verified'),
-            Media::make('Avatar','avatar'),
-            Media::make('Selfie','self_image'),
+            Boolean::make('Compte vérifié ?', 'is_verified'),
+            Media::make('Avatar', 'avatar'),
+            Media::make('Selfie', 'self_image'),
 
             Text::make('Prenom', 'firstname')
                 ->sortable()
@@ -90,7 +91,7 @@ class User extends Resource
 
             Text::make('Email')
                 ->sortable()
-                ->rules('required', 'email', 'max:254', Rule::unique('users','email')->ignore($this->id)),
+                ->rules('required', 'email', 'max:254', Rule::unique('users', 'email')->ignore($this->id)),
 
 
             Text::make('Téléphone', 'phone_number')
@@ -104,14 +105,14 @@ class User extends Resource
                 ->nullable(),
 
             Textarea::make('Description')->nullable(),
-            JSON::make('Dernière position','last_location', [
-                Text::make('latitude')->rules(['nullable','numeric', 'between:-90,90'])
-                    ->displayUsing(fn ($request, $model, $attribute) => optional($model->last_location)->latitude),
-                Text::make('longitude')->rules(['nullable','numeric', 'between:-180,180'])
-                    ->displayUsing(fn ($request, $model, $attribute) => optional($model->last_location)->longitude),
+            JSON::make('Dernière position', 'last_location', [
+                Text::make('latitude')->rules(['nullable', 'numeric', 'between:-90,90'])
+                    ->displayUsing(fn($request, $model, $attribute) => optional($model->last_location)->latitude),
+                Text::make('longitude')->rules(['nullable', 'numeric', 'between:-180,180'])
+                    ->displayUsing(fn($request, $model, $attribute) => optional($model->last_location)->longitude),
             ])->fillAtOnce(function ($request, $requestValues, $model, $attribute, $requestAttribute) {
-                if($requestValues['latitude'] && $requestValues['longitude']){
-                  $model->last_location =new Point($requestValues['latitude'], $requestValues['longitude']);
+                if ($requestValues['latitude'] && $requestValues['longitude']) {
+                    $model->last_location = new Point($requestValues['latitude'], $requestValues['longitude']);
                     return new Point($requestValues['latitude'], $requestValues['longitude']);
                 }
                 return null;
@@ -120,7 +121,7 @@ class User extends Resource
 
             Hidden::make('user_type')->default('customer'),
 
-            MorphToMany::make('Signalement','reports',Report::class),
+            MorphToMany::make('Signalement', 'reports', Report::class),
 
         ];
     }
@@ -128,7 +129,7 @@ class User extends Resource
     /**
      * Get the cards available for the request.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function cards(NovaRequest $request)
@@ -139,7 +140,7 @@ class User extends Resource
     /**
      * Get the filters available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function filters(NovaRequest $request)
@@ -150,7 +151,7 @@ class User extends Resource
     /**
      * Get the lenses available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function lenses(NovaRequest $request)
@@ -161,7 +162,7 @@ class User extends Resource
     /**
      * Get the actions available for the resource.
      *
-     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @param \Laravel\Nova\Http\Requests\NovaRequest $request
      * @return array
      */
     public function actions(NovaRequest $request)
@@ -172,7 +173,6 @@ class User extends Resource
             new SendNotificationToUsers()
         ];
     }
-
 
 
     public static function relatableQuery(NovaRequest $request, $query)

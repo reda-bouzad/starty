@@ -34,13 +34,13 @@ class JoinEventNotification extends Notification implements ShouldQueue
         $this->user = $user;
 
 
-        $this->title =[
-            "fr" =>  $event->type === "private" ? 'Nouvelle demande':'Nouveau participant',
-            "en" => $event->type === "private"? 'New request': 'New participant'
+        $this->title = [
+            "fr" => $event->type === "private" ? 'Nouvelle demande' : 'Nouveau participant',
+            "en" => $event->type === "private" ? 'New request' : 'New participant'
         ];
         $this->content = [
-            "fr" =>  $event->type === "private" ?"Un utilisateur demande à rejoindre votre soirée '{$event->label}'":"Un nouveau participant à rejoint votre soirée '{$event->label}'",
-            "en" =>  $event->type === "private" ?"A new user request to participate to your party '{$event->label}'": "A new participant joint the party '{$event->label}"
+            "fr" => $event->type === "private" ? "Un utilisateur demande à rejoindre votre soirée '{$event->label}'" : "Un nouveau participant à rejoint votre soirée '{$event->label}'",
+            "en" => $event->type === "private" ? "A new user request to participate to your party '{$event->label}'" : "A new participant joint the party '{$event->label}"
         ];
 //        dd($this->title, $this->content, $this->data);
     }
@@ -48,28 +48,28 @@ class JoinEventNotification extends Notification implements ShouldQueue
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function via($notifiable)
     {
-        return [FcmChannel::class,'database'];
+        return [FcmChannel::class, 'database'];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      */
     public function toFcm($notifiable)
     {
-        $eventData = json_decode((new EventResource($this->event))->toJson(),1);
-        $eventData['join_user'] = json_decode((new UserResource($this->user))->toJson(),1);
+        $eventData = json_decode((new EventResource($this->event))->toJson(), 1);
+        $eventData['join_user'] = json_decode((new UserResource($this->user))->toJson(), 1);
         $this->data = [
             "type" => "join.events",
             "data" => $eventData
         ];
-        return   FcmMessage::create()
+        return FcmMessage::create()
             ->setData(["data" => json_encode($this->data)])
             ->setNotification(\NotificationChannels\Fcm\Resources\Notification::create()
                 ->setTitle($this->title[$notifiable->lang ?? App::getLocale()])
@@ -80,13 +80,13 @@ class JoinEventNotification extends Notification implements ShouldQueue
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
      * @return array
      */
     public function toArray($notifiable)
     {
-        $eventData = json_decode((new EventResource($this->event))->toJson(),1);
-        $eventData['join_user'] = json_decode((new UserResource($this->user))->toJson(),1);
+        $eventData = json_decode((new EventResource($this->event))->toJson(), 1);
+        $eventData['join_user'] = json_decode((new UserResource($this->user))->toJson(), 1);
         $this->data = [
             "type" => "join.events",
             "data" => $eventData

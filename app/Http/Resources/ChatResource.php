@@ -16,16 +16,16 @@ class ChatResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
     public function toArray($request)
     {
         return array_filter([
-            "id" =>$this->id,
+            "id" => $this->id,
             "type" => $this->type,
             "name" => $this->name,
-            "state" =>$this->state,
+            "state" => $this->state,
             "members_count" => $this->members_count,
             "last_message" => new ChatMessageResource($this->whenLoaded("lastMessage")),
             'other_members' => UserResource::collection($this->whenLoaded('members')),
@@ -33,7 +33,7 @@ class ChatResource extends JsonResource
             "created_by" => $this->created_by,
             "avatar" => $this->getFirstMediaUrl('avatar'),
             "created_at" => $this->created_at,
-            "event" =>  EventResource::collection($this->whenLoaded('event'))
-        ],fn($value) => $value !==null);
+            "event" => EventResource::collection($this->whenLoaded('event'))
+        ], fn($value) => $value !== null);
     }
 }

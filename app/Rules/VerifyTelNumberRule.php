@@ -8,7 +8,8 @@ use Kreait\Firebase\Auth;
 
 class VerifyTelNumberRule implements Rule
 {
-    protected  bool $is_token ;
+    protected bool $is_token;
+
     /**
      * Create a new rule instance.
      *
@@ -22,23 +23,23 @@ class VerifyTelNumberRule implements Rule
     /**
      * Determine if the validation rule passes.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
+     * @param string $attribute
+     * @param mixed $value
      * @return bool
      */
     public function passes($attribute, $value)
     {
-        if($this->is_token) {
+        if ($this->is_token) {
             $token_attribute = $attribute;
             $token_value = $value;
         } else {
-            $token_attribute = $attribute."_token";
+            $token_attribute = $attribute . "_token";
             $token_value = request()->get($token_attribute);
             error_log(implode(request()->all()));
-            $validator = \Validator::make([$token_attribute =>$token_value],[$token_attribute =>'required']);
+            $validator = \Validator::make([$token_attribute => $token_value], [$token_attribute => 'required']);
 
-            if($validator->fails()) {
-                throw new HttpResponseException(response()->json($validator->errors()->toArray(),422 ));
+            if ($validator->fails()) {
+                throw new HttpResponseException(response()->json($validator->errors()->toArray(), 422));
 //            throw new HttpResponseException(RB::validationError($validator->errors()->toArray(),'auth.user.tokenIsRequired'));
             }
         }
@@ -48,11 +49,11 @@ class VerifyTelNumberRule implements Rule
             /** @var Auth $auth */
             $auth = app('firebase.auth');
             $verifiedIdToken = $auth->verifyIdToken($token_value);
-            if($this->is_token) return true;
+            if ($this->is_token) return true;
             $uid = $verifiedIdToken->claims()->get('sub');
             $data = $auth->getUser($uid);
             return $data->phoneNumber === $value;
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             error_log($e);
             return false;
         }

@@ -30,7 +30,7 @@ class UserTypes extends Partition
      *
      * @return DateTimeInterface|DateInterval|float|int|null
      */
-    public function cacheFor():DateInterval|float|DateTimeInterface|int|null
+    public function cacheFor(): DateInterval|float|DateTimeInterface|int|null
     {
         // return now()->addMinutes(5);
         return null;

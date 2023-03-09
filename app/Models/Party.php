@@ -181,11 +181,7 @@ class Party extends Model implements HasMedia
             ->optimize()
             ->performOnCollections('first_image');
     }
-
-    public function addPriceCategories(PriceCategory $priceCategories)
-    {
-
-    }
+    
 
     public function getImagesAttribute()
     {
