@@ -317,19 +317,7 @@ class EventController extends Controller
             "user_id" => \Auth::id(),
             "event_id" => $event->id
         ]);
-
-        // on capture le paiement directement si c'est public
-        if ($event->pricy && $event->type === "public") {
-            try {
-                $intent = Cashier::stripe()->paymentIntents->retrieve($eventParticipant->payment_intent_id);
-                $intent->capture();
-
-
-            } catch (Exception) {
-                return response()->json(["message" => "payment_failed"], 403);
-            }
-
-        }
+        
         EventParticipant::whereId($eventParticipant->id)->update(["payment_processing" => false, "accepted" => $event->type === "public", 'rejected' => false]);
         if ($event->chat_id && $event->type === "public" && !ChatUser::where('chat_id', $event->chat_id)->where('user_id', Auth::id())->exists()) {
             ChatUser::updateOrCreate([
