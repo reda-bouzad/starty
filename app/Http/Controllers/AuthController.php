@@ -25,8 +25,6 @@ use Str;
 
 class AuthController extends Controller
 {
-
-
     public function login(LoginRequest $request, FirebaseAuthService $firebaseAuthService): JsonResponse
     {
         $user = $firebaseAuthService->getOrCreateUser($request->firebase_token);
@@ -95,7 +93,7 @@ class AuthController extends Controller
                 ->first();
             optional($badUser)->delete();
         }
-//        Log::info("update : ".json_encode($profileRequest->all()));
+        //        Log::info("update : ".json_encode($profileRequest->all()));
         $user->update([
             'firstname' => $profileRequest->firstname ?? $user->firstname,
             'lastname' => $profileRequest->lastname ?? $user->lastname,
@@ -186,5 +184,4 @@ class AuthController extends Controller
             "exists" => EmailVerificationCode::where('email', $request->email)->where('code', $request->code)->exists()
         ];
     }
-
 }

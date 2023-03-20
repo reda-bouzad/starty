@@ -18,11 +18,14 @@ use Illuminate\Support\Facades\Http;
 
 class PaymentController extends Controller
 {
-
+    /**
+     * @param Party $event
+     * @param int $price
+     * @return JsonResponse
+     */
     public function paymentLink(Party $event, int $price): JsonResponse
     {
         $priceCategory = PriceCategory::where('id', $price)->first();
-
         if (!$event->price_categories()->where("id", $price)->exists()) {
             if (Carbon::parse($event->created_at)->isBefore(env("EVENT_TICKET_CHANGE"))) {
                 if ($event->price_categories()->count() == 0) {
@@ -32,7 +35,6 @@ class PaymentController extends Controller
                 }
             } else return response()->json(["message" => "invalid price"], 422);
         }
-
         if (Auth::user()?->revolut_customer_id) {
             $res = $this->getRes($event, $priceCategory);
         } else if (Auth::user()?->email) {
@@ -56,12 +58,9 @@ class PaymentController extends Controller
         } else {
             $res = $this->getRes($event, $priceCategory, false);
         }
-
         if ($res->status() != 201) {
             response()->json(["message" => "server_error"], 500);
         }
-
-
         if (
             !EventParticipant::where([
                 "event_id" => $event->id,
@@ -93,18 +92,17 @@ class PaymentController extends Controller
         return response()->json(["url" => $res->json('checkout_url')]);
     }
 
+    /**
+     * @param int $event
+     * @param int $ticket_id
+     * @return array
+     */
     public function paymentStatus(int $event, int $ticket_id): array
     {
         try {
-
             $event_participant = EventParticipant::getElement($event, Auth::id(), $ticket_id);
-
-
             $res = Http::withtoken(AppConfig::first()->revolut_pk)->get(env('REVOLUT_BASE_URL') . "orders/" . $event_participant->payment_intent_id);
-
-
             if ($event_participant) {
-
                 EventParticipant::where([
                     "event_id" => $event,
                     "user_id" => Auth::id(),
@@ -129,16 +127,17 @@ class PaymentController extends Controller
         }
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function webhook(Request $request): JsonResponse
     {
-
         switch ($request->get('event')) {
             case "ORDER_COMPLETED":
             {
                 $res = Http::withtoken(AppConfig::first()->revolut_pk)->
                 get(env('REVOLUT_BASE_URL') . "orders/" . $request->get('order_id'));
-
-
                 $metadata = $res->json('metadata');
                 EventParticipant::where([
                     "event_id" => $metadata['event_id'],
@@ -163,7 +162,6 @@ class PaymentController extends Controller
                 break;
             }
         }
-
         return response()->json(["message" => "ok"]);
     }
 

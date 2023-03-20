@@ -1,0 +1,1 @@
+<?php /**PATH /home/devops3/Desktop/Workspace/starty/server/vendor/laravel/nova/src/../resources/views/partials/meta.blade.php ENDPATH**/ ?>

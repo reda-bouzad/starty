@@ -2,9 +2,12 @@
 
 namespace App\Http\Resources;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
+use JsonSerializable;
 
 /**
  * @property Collection $events
@@ -17,12 +20,11 @@ class UserResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @param Request $request
+     * @return array|Arrayable|JsonSerializable
      */
-    public function toArray($request)
+    public function toArray($request): array|JsonSerializable|Arrayable
     {
-
         return array_filter([
             "id" => $this->id,
             "firstname" => $this->show_pseudo_only && $this->id != Auth::id() ? null : $this->firstname,
@@ -71,8 +73,6 @@ class UserResource extends JsonResource
                     'paid' => $this->pivot->payment_intent_id !== null && !$this->pivot->payment_processing
                 ];
             }),
-
-
         ], fn($value) => $value !== null, 0);
     }
 }
