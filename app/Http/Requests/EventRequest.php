@@ -17,6 +17,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @property int nb_participants
  * @property float lat
  * @property float long
+ * @property bool is_visible
  */
 class EventRequest extends FormRequest
 {
@@ -25,7 +26,7 @@ class EventRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -35,25 +36,26 @@ class EventRequest extends FormRequest
      *
      * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            'label' => 'required|string|max:255',
-            'type' => 'required|string|in:public,private',
-            'contact' => 'required|string|max:255',
-            'pricy' => 'required|boolean',
-            'price_categories' => 'required_if:pricy,==,1|array',
-            'price' => 'required_if:pricy,==,1',
-            'nb_participants' => 'required|integer',
-            'start_at' => 'required',
-            'end_at' => 'required',
-            'lat' => 'required|numeric|between:-90,90',
-            'long' => 'required|numeric|between:-180,180',
-            'images' => 'sometimes',
-            'description' => 'sometimes',
-            'address' => 'sometimes',
-            'devise' => 'sometimes',
-            'phone_number' => 'sometimes'
+            "label" => "required|string|max:255",
+            "type" => "required|string|in:public,private",
+            "contact" => "required|string|max:255",
+            "pricy" => "required|boolean",
+            "price_categories" => "required_if:pricy,==,1|array",
+            "price" => "required_if:pricy,==,1",
+            "nb_participants" => "required|integer",
+            "start_at" => "required",
+            "end_at" => "required",
+            "lat" => "required|numeric|between:-90,90",
+            "long" => "required|numeric|between:-180,180",
+            "images" => "sometimes",
+            "description" => "sometimes",
+            "address" => "sometimes",
+            "devise" => "sometimes",
+            "phone_number" => "sometimes",
+            "is_visible" => "boolean",
         ];
     }
 }
