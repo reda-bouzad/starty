@@ -396,6 +396,7 @@ class EventController extends Controller
         EventParticipant::updateOrCreate([
             "user_id" => \Auth::id(),
             "event_id" => $event->id,
+            "is_visible" => true,
         ]);
         $eventParticipant = EventParticipant::firstWhere([
             "user_id" => \Auth::id(),

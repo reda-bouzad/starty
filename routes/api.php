@@ -4,6 +4,7 @@ use App\Http\Controllers\AppConfigController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
@@ -137,6 +138,17 @@ Route::group(["middleware" => ["auth:sanctum", "languable"]], function () {
     Route::get("events/to-reviews-list", [
         ReviewController::class,
         "reviewsList",
+    ]);
+
+    // Event Participants
+    Route::put("/events/{event}/visible", [
+        EventParticipantController::class,
+        "hideOrShowParticipants",
+    ]);
+
+    Route::put("/events/{event}/auth-visible", [
+        EventParticipantController::class,
+        "hideOrShowAuthParticipant",
     ]);
 
     //Messages
