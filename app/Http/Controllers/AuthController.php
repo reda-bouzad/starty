@@ -48,6 +48,7 @@ class AuthController extends Controller
         }
         $user = auth()->user();
         $token = $user->createToken(Str::random(32));
+        $user->loadCount("events");
         return response()->json([
             "access_token" => $token->plainTextToken,
             "token_type" => "Bearer",
@@ -77,6 +78,7 @@ class AuthController extends Controller
         $input["password"] = Hash::make($input["password"]);
         $user = User::create($input);
         $token = $user->createToken(Str::random(32));
+        $user->loadCount("events");
         return response()->json(
             [
                 "status" => "success",
@@ -138,13 +140,9 @@ class AuthController extends Controller
      */
     public function logout(?Request $request): JsonResponse
     {
-        /*Auth::user()
+        Auth::user()
             ->currentAccessToken()
-            ->delete();*/
-        /*return response()->json([
-            "message" => "Déconnecté",
-        ]);*/
-        PersonalAccessToken::findToken($request->bearerToken())->delete();
+            ->delete();
         return response()->json([
             "message" => "Log out",
         ]);
