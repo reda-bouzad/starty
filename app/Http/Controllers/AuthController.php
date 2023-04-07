@@ -47,8 +47,9 @@ class AuthController extends Controller
             throw new AuthenticationException();
         }
         $user = auth()->user();
+        $token = $user->createToken(Str::random(32));
         return response()->json([
-            "access_token" => $user->createToken("starty-app")->plainTextToken,
+            "access_token" => $token->plainTextToken,
             "token_type" => "Bearer",
             "user" => $user,
         ]);
@@ -75,12 +76,12 @@ class AuthController extends Controller
         $input = $request->all();
         $input["password"] = Hash::make($input["password"]);
         $user = User::create($input);
+        $token = $user->createToken(Str::random(32));
         return response()->json(
             [
                 "status" => "success",
                 "message" => "User created successfully",
-                "access_token" => $user->createToken("starty-app")
-                    ->plainTextToken,
+                "access_token" => $token->plainTextToken,
                 "token_type" => "Bearer",
                 "user" => $user,
             ],
