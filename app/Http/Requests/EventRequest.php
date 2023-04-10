@@ -55,7 +55,7 @@ class EventRequest extends FormRequest
             "address" => "sometimes",
             "devise" => "sometimes",
             "phone_number" => "sometimes",
-            "is_visible" => "boolean",
+            "is_visible" => "string|in:visible,hidden",
         ];
     }
 }
