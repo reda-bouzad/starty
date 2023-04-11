@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property int $user_id
  * @property int $event_id
  * @property int $ticket_id
- * @property bool is_visible
+ * @property string is_visible
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Party $event

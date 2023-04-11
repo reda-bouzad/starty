@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChangeUserVisibilityRequest;
 use App\Http\Requests\EventRequest;
 use App\Http\Requests\EventSearchRequest;
 use App\Http\Resources\EventResource;
@@ -121,7 +122,7 @@ class EventController extends Controller
                     $fileAdder
                         ->toMediaCollection("image")
                         ->withCustomProperties([
-                            "order" => $key + 1,
+                            "order" => intval($key) + 1,
                         ]);
                 });
         }
@@ -202,7 +203,7 @@ class EventController extends Controller
             "address" => $request->address ?? $event->address,
             "share_link" => $request->share_link ?? $event->share_link,
             "devise" => $request->devise ?? $event->devise,
-            "is_visible" => $request->is_visible ?? $event->is_visible,
+            "event_visible" => $request->event_visible ?? $event->event_visible,
         ]);
 
         $event->price_categories()->createMany($request->price_categories);
@@ -841,6 +842,76 @@ class EventController extends Controller
             "is_invited" => true,
             "ticket" => $ticket,
             "user" => new UserResource($user),
+        ]);
+    }
+
+    /**
+     * Define if Authenticated User Participant will be visible or not
+     *
+     * @param Party $party
+     * @return JsonResponse
+     */
+    public function toggleUserVisibility(Party $party)
+    {
+        $partyId = $party->id;
+        $userId = Auth::id();
+        $participant = EventParticipant::where("user_id", $userId)->where(
+            "event_id",
+            $partyId
+        );
+        $participant->update([
+            "is_visible" =>
+                $participant->first()->is_visible == "hidden"
+                    ? "visible"
+                    : "hidden",
+        ]);
+        return response()->json([
+            "status" =>
+                $participant->first()->is_visible == "visible"
+                    ? "Visible"
+                    : "Hidden",
+        ]);
+    }
+
+    /**
+     * Define if Event Participants will be visible or not
+     *
+     * @param Party $party
+     * @return JsonResponse
+     */
+    public function toggleParticipantsVisibility(Party $party)
+    {
+        $party->update([
+            "is_visible" =>
+                $party->first()->is_visible === "hidden" ? "visible" : "hidden",
+        ]);
+        return response()->json([
+            "status" =>
+                $party->first()->is_visible === "visible"
+                    ? "Visible"
+                    : "Hidden",
+        ]);
+    }
+
+    /**
+     * Define if the event will be visible or not
+     *
+     * @param Party $party
+     * @return JsonResponse
+     */
+    public function toggleEvent(Party $party)
+    {
+        $party->update([
+            "event_visible" =>
+                $party->first()->event_visible === "hidden"
+                    ? "visible"
+                    : "hidden",
+        ]);
+        return response()->json([
+            "status" =>
+                $party->first()->event_visible === "visible"
+                    ? "Visible"
+                    : "Hidden",
         ]);
     }
 }

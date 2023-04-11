@@ -14,7 +14,7 @@ return new class extends Migration {
     {
         Schema::table("events", function (Blueprint $table) {
             $table
-                ->enum("is_visible", ["visible", "hidden"])
+                ->enum("event_visible", ["visible", "hidden"])
                 ->default("visible");
         });
     }
@@ -27,7 +27,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table("events", function (Blueprint $table) {
-            $table->dropColumn("is_visible");
+            $table->dropColumn("event_visible");
         });
     }
 };

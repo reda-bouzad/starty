@@ -13,7 +13,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table("event_participants", function (Blueprint $table) {
-            $table->boolean("is_visible")->nullable();
+            $table
+                ->enum("is_visible", ["visible", "hidden"])
+                ->default("visible");
         });
     }
 

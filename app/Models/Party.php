@@ -74,7 +74,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  * @property string|null $stripe_price_id
  * @property string|null $long
  * @property string|null $lat
- * @property boolean|null $is_visible
+ * @property string|null $is_visible
+ * @property string|null $event_visible
  * @property-read Collection<int, User> $acceptedParticipants
  * @property-read int|null $accepted_participants_count
  * @property-read Chat|null $eventChat
@@ -147,7 +148,6 @@ class Party extends Model implements HasMedia
         "end_at" => "datetime",
         "pricy" => "boolean",
         "blocked_by" => "array",
-        "is_visible" => "boolean",
     ];
 
     protected static function boot()
@@ -262,6 +262,7 @@ class Party extends Model implements HasMedia
                 "rejected",
                 "payment_intent_id",
                 "payment_processing",
+                "is_visible",
             ]);
     }
 
@@ -284,6 +285,7 @@ class Party extends Model implements HasMedia
                 "rejected",
                 "payment_intent_id",
                 "payment_processing",
+                "is_visible",
             ]);
     }
 

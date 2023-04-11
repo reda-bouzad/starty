@@ -17,7 +17,6 @@ use Illuminate\Foundation\Http\FormRequest;
  * @property int nb_participants
  * @property float lat
  * @property float long
- * @property bool is_visible
  */
 class EventRequest extends FormRequest
 {
@@ -55,7 +54,7 @@ class EventRequest extends FormRequest
             "address" => "sometimes",
             "devise" => "sometimes",
             "phone_number" => "sometimes",
-            "is_visible" => "string|in:visible,hidden",
+            "event_visible" => "sometimes|in:visible,hidden",
         ];
     }
 }

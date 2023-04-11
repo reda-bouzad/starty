@@ -139,16 +139,17 @@ Route::group(["middleware" => ["auth:sanctum", "languable"]], function () {
         ReviewController::class,
         "reviewsList",
     ]);
-
-    // Event Participants
-    Route::put("/events/{event}/visible", [
-        EventParticipantController::class,
-        "hideOrShowParticipants",
+    Route::get("event/{party}/visibility", [
+        EventController::class,
+        "toggleUserVisibility",
     ]);
-
-    Route::put("/events/{event}/auth-visible", [
-        EventParticipantController::class,
-        "hideOrShowAuthParticipant",
+    Route::get("event/{party}/toggle", [
+        EventController::class,
+        "toggleParticipantsVisibility",
+    ]);
+    Route::get("event/{party}/toggleEvent", [
+        EventController::class,
+        "toggleEvent",
     ]);
 
     //Messages
