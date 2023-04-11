@@ -121,7 +121,7 @@ class EventController extends Controller
                     $fileAdder
                         ->toMediaCollection("image")
                         ->withCustomProperties([
-                            "order" => $key + 1,
+                            "order" => intval($key) + 1,
                         ]);
                 });
         }
@@ -841,6 +841,15 @@ class EventController extends Controller
             "is_invited" => true,
             "ticket" => $ticket,
             "user" => new UserResource($user),
+        ]);
+    }
+
+    public function changeUserVisibility(Party $party, Request $request)
+    {
+        $participant = EventParticipant::where("user_id", Auth::id());
+        $participant->update(["is_visible" => $request->is_visible]);
+        return \response()->json([
+            "status" => $request->is_visible ? "Visible" : "Hidden",
         ]);
     }
 }
