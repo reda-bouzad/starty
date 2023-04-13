@@ -13,6 +13,7 @@ use JsonSerializable;
  * @property Collection $events
  * @property string $firstname
  * @property string $lastname
+ * @property float $organizer_commission
  */
 class UserResource extends JsonResource
 {
@@ -35,12 +36,14 @@ class UserResource extends JsonResource
             "email" => $this->email,
             "pseudo" => $this->pseudo,
             "description" => $this->description,
+            "organizer_commission" => $this->organizer_commission,
             "phone_number" => $this->phone_number,
             "location" => $this->whenAppended('location'),
             "address" => $this->address,
             "gender" => $this->gender,
             "birth_date" => $this->birth_date,
             "is_verified" => $this->is_verified,
+            "is_visible" => $this->is_visible,
             "follows" => UserResource::collection($this->whenLoaded('follows')),
             "follow_ids" => $this->whenLoaded('follows', function () {
                 return $this->followers->map->id;

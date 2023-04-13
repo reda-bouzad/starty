@@ -31,6 +31,8 @@ class Administrator extends Resource
         return "Administrateurs";
     }
 
+
+
     /**
      * The columns that should be searched.
      *

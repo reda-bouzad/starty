@@ -7,6 +7,7 @@ use App\Nova\AppConfig;
 use App\Nova\Dashboards\Statistics;
 use App\Nova\Event;
 use App\Nova\EventReport;
+use App\Nova\Organizer;
 use App\Nova\User;
 use App\Nova\Report;
 use App\Nova\ModelReport;
@@ -61,7 +62,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 ]),
                 MenuSection::make('Paramètres', [
                     MenuItem::resource(AppConfig::class),
-//                    MenuItem::resource(  config('nova-settings.resource')),
+                    MenuItem::resource(  Organizer::class),
 
 
                 ])->icon('settings')->collapsable(),

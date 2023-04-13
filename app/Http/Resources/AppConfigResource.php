@@ -10,6 +10,7 @@ use JsonSerializable;
 
 /**
  * Class AppConfigResource
+ * @property float $commission_attendee
  * @package App\Http\Resources
  *
  * @mixin AppConfig
@@ -32,6 +33,7 @@ class AppConfigResource extends JsonResource
             "active_google_login" => $this->active_google_login,
             "active_phone_number_login" => $this->active_phone_number_login,
             "commission" => $this->commission,
+            "commission_attendee" => $this->commission_attendee,
             "stripe_pk" => $this->stripe_pk,
             "android_build" => $this->android_build,
             "ios_build" => $this->ios_build,

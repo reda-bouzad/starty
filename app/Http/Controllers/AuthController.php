@@ -76,7 +76,7 @@ class AuthController extends Controller
         }
         $input = $request->all();
         $input["password"] = Hash::make($input["password"]);
-        $user = User::create($input);
+        $user = User::create([...$input, "organizer_commission" => null]);
         $token = $user->createToken(Str::random(32));
         $user->loadCount("events");
         return response()->json(
@@ -92,9 +92,10 @@ class AuthController extends Controller
     }
 
     public function login(
-        LoginRequest $request,
+        LoginRequest        $request,
         FirebaseAuthService $firebaseAuthService
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $user = $firebaseAuthService->getOrCreateUser($request->firebase_token);
         $token = $user->createToken(Str::random(14));
         $user->phone_number = $user->phone_number ?? $request->phone_number;
@@ -190,20 +191,20 @@ class AuthController extends Controller
             "lastname" => $profileRequest->lastname ?? $user->lastname,
             "pseudo" => $profileRequest->pseudo ?? $user->pseudo,
             "show_pseudo_only" =>
-                $profileRequest->show_pseudo_only ?? $user->show_pseudo_only,
+                    $profileRequest->show_pseudo_only ?? $user->show_pseudo_only,
             "gender" => $profileRequest->gender ?? $user->gender,
             "birth_date" =>
-                $profileRequest->date("birth_date") ?? $user->birth_date,
+                    $profileRequest->date("birth_date") ?? $user->birth_date,
             "description" => $profileRequest->description ?? $user->description,
             "fcm_token" => $token,
             "last_location" => $location ?? $user->last_location,
             "address" => $profileRequest->address ?? $user->address,
             "phone_number" =>
-                $profileRequest->phone_number ?? $user->phone_number,
+                    $profileRequest->phone_number ?? $user->phone_number,
             "email" => $profileRequest->email ?? $user->email,
             "lang" => $profileRequest->lang ?? $user->lang,
             "preferred_radius" =>
-                $profileRequest->preferred_radius ?? $user->preferred_radius,
+                    $profileRequest->preferred_radius ?? $user->preferred_radius,
         ]);
 
         if (

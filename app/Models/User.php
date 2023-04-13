@@ -184,8 +184,10 @@ class User extends Authenticatable implements HasMedia
         'media',
         'password',
         'deleted_chats',
-        'deleted_messages'
+        'deleted_messages',
     ];
+
+    
 
     /**
      * The attributes that should be cast.

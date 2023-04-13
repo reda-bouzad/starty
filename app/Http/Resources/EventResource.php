@@ -27,6 +27,7 @@ class EventResource extends JsonResource
                 "id" => $this->id,
                 "label" => $this->label,
                 "type" => $this->type,
+                "is_visible" => $this->is_visible ? "visible" : "hidden",
                 "pricy" => $this->pricy,
                 "price" => $this->price,
                 "nb_participants" => $this->nb_participants,
@@ -43,28 +44,36 @@ class EventResource extends JsonResource
                     ->select("id", "user_id", "event_id")
                     ->get(),
                 "user" => new UserResource($this->whenLoaded("user")),
-                /*"participants" => UserResource::collection(
-                    $this->whenLoaded("participants")
-                ),*/
                 "participants" =>
-                    $this->is_visible == "visible"
+                    $this->is_visible || Auth::id() == $this->user_id
                         ? collect(
-                            UserResource::collection(
-                                $this->participants->filter(
-                                    fn($e) => $e->pivot->is_visible == "visible"
-                                )
+                        UserResource::collection(
+                            $this->participants->filter(
+                                function ($e) {
+                                    $e["is_visible"] = $e->pivot->is_visible;
+                                    error_log($e["is_visible"]);
+                                    if (Auth::id() == $this->user_id) return true;
+                                    if (Auth::id() == $e->pivot->user_id) return true;
+                                    return $e->pivot->is_visible == "visible";
+                                }
                             )
                         )
+                    )
                         : collect([]),
                 "first_participants" =>
-                    $this->is_visible == "visible"
+                    $this->is_visible || Auth::id() == $this->user_id
                         ? collect(
-                            UserResource::collection(
-                                $this->first_participants->filter(
-                                    fn($e) => $e->pivot->is_visible == "visible"
-                                )
+                        UserResource::collection(
+                            $this->first_participants->filter(
+                                function ($e) {
+                                    $e["is_visible"] = $e->pivot->is_visible;
+                                    if (Auth::id() == $this->user_id) return true;
+                                    if (Auth::id() == $e->pivot->user_id) return true;
+                                    return $e->pivot->is_visible == "visible";
+                                }
                             )
                         )
+                    )
                         : collect([]),
                 "participants_count" => $this->participants_count,
                 "accepted_participants_count" =>

@@ -112,9 +112,10 @@ class EventController extends Controller
      * @throws FileIsTooBig
      */
     public function addImagesToEvent(
-        Party $event,
+        Party   $event,
         Request $request
-    ): JsonResponse {
+    ): JsonResponse
+    {
         if ($request->hasFile("images")) {
             $event
                 ->addMultipleMediaFromRequest(["images"])
@@ -136,9 +137,10 @@ class EventController extends Controller
      * @throws ValidationException
      */
     public function addSingleImageToEvent(
-        Party $event,
+        Party   $event,
         Request $request
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $this->validate($request, [
             "image" => "required|image",
             "order" => "required|numeric|between:1,10",
@@ -188,10 +190,10 @@ class EventController extends Controller
             "pricy" => $request->pricy ?? $event->pricy,
             "price" => $request->price ?? $event->price,
             "nb_participants" =>
-                $request->nb_participants ?? $event->nb_participants,
+                    $request->nb_participants ?? $event->nb_participants,
             "remaining_participants" =>
-                $request->remaining_participants ??
-                $event->remaining_participants,
+                    $request->remaining_participants ??
+                    $event->remaining_participants,
             "contact" => $request->contact ?? $event->contact,
             "start_at" => $request->start_at ?? $event->start_at,
             "end_at" => $request->end_at ?? $event->end_at,
@@ -240,10 +242,15 @@ class EventController extends Controller
         }
         $event->delete();
         $chat->delete();
-        Notification::send(
-            $event->participant,
-            new CancelEventNotification($event)
-        );
+        try {
+
+            Notification::send(
+                $event->participant,
+                new CancelEventNotification($event)
+            );
+        } catch (Exception) {
+
+        }
         return response()->json([
             "message" => "Evènement supprimé",
         ]);
@@ -448,7 +455,8 @@ class EventController extends Controller
 
     public function searchEvent(
         EventSearchRequest $request
-    ): AnonymousResourceCollection {
+    ): AnonymousResourceCollection
+    {
         $center = new Point(
             $request->get("lat", 0.0),
             $request->get("long", 0.0)
@@ -458,6 +466,7 @@ class EventController extends Controller
         $data = Party::query()
             ->withCount(["participants", "acceptedParticipants"])
             ->orderBy("start_at")
+            ->where('event_visible', "=", "visible")
             ->when(
                 $request->lat && $request->long && $request->radius,
                 function (SpatialBuilder $query) use ($request, $center) {
@@ -565,8 +574,9 @@ class EventController extends Controller
 
     public function participants(
         Request $request,
-        Party $event
-    ): AnonymousResourceCollection {
+        Party   $event
+    ): AnonymousResourceCollection
+    {
         $query =
             $request->only_accepted === true || $event->user_id !== Auth::id()
                 ? $event->acceptedParticipants()
@@ -586,9 +596,9 @@ class EventController extends Controller
             if ($event_participant->accepted) {
                 $res = Http::withtoken(AppConfig::first()->revolut_pk)->post(
                     env("REVOLUT_BASE_URL") .
-                        "orders/" .
-                        $event_participant->payment_intent_id .
-                        "/refund"
+                    "orders/" .
+                    $event_participant->payment_intent_id .
+                    "/refund"
                 );
                 if (!$res->ok()) {
                     return response()->json(
@@ -599,9 +609,9 @@ class EventController extends Controller
             }
             Http::withtoken(AppConfig::first()->revolut_pk)->post(
                 env("REVOLUT_BASE_URL") .
-                    "orders/" .
-                    $event_participant->payment_intent_id .
-                    "/cancel"
+                "orders/" .
+                $event_participant->payment_intent_id .
+                "/cancel"
             );
         }
         $event->participants()->detach(Auth::id());
@@ -616,8 +626,9 @@ class EventController extends Controller
 
     public function acceptRequest(
         Party $event,
-        int $user
-    ): Response|JsonResponse {
+        int   $user
+    ): Response|JsonResponse
+    {
         if (
             !EventParticipant::where([
                 "event_id" => $event->id,
@@ -638,16 +649,16 @@ class EventController extends Controller
         if ($event_participant->payment_intent_id) {
             $res = Http::withtoken(AppConfig::first()->revolut_pk)->post(
                 env("REVOLUT_BASE_URL") .
-                    "orders/" .
-                    $event_participant->payment_intent_id .
-                    "/capture",
+                "orders/" .
+                $event_participant->payment_intent_id .
+                "/capture",
                 ["amount" => $ticket->price]
             );
             Log::channel("stderr")->error(
                 env("REVOLUT_BASE_URL") .
-                    "orders/" .
-                    $event_participant->payment_intent_id .
-                    "/capture"
+                "orders/" .
+                $event_participant->payment_intent_id .
+                "/capture"
             );
             if (!$res->ok()) {
                 return response()->json(["message" => "payment_failed"], 403);
@@ -674,8 +685,9 @@ class EventController extends Controller
 
     public function rejectRequest(
         Party $event,
-        int $user
-    ): Response|JsonResponse {
+        int   $user
+    ): Response|JsonResponse
+    {
         if (
             !EventParticipant::where([
                 "event_id" => $event->id,
@@ -692,9 +704,9 @@ class EventController extends Controller
             if ($event_participant->accepted) {
                 $res = Http::withtoken(AppConfig::first()->revolut_pk)->post(
                     env("REVOLUT_BASE_URL") .
-                        "orders/" .
-                        $event_participant->payment_intent_id .
-                        "/refund"
+                    "orders/" .
+                    $event_participant->payment_intent_id .
+                    "/refund"
                 );
                 if (!$res->ok()) {
                     return response()->json(
@@ -705,9 +717,9 @@ class EventController extends Controller
 
                 $res = Http::withtoken(AppConfig::first()->revolut_pk)->post(
                     env("REVOLUT_BASE_URL") .
-                        "orders/" .
-                        $event_participant->payment_intent_id .
-                        "/cancel"
+                    "orders/" .
+                    $event_participant->payment_intent_id .
+                    "/cancel"
                 );
                 if (!$res->ok()) {
                     return response()->json(
@@ -849,48 +861,35 @@ class EventController extends Controller
      * Define if Authenticated User Participant will be visible or not
      *
      * @param Party $party
-     * @return JsonResponse
+     * @return EventResource
      */
-    public function toggleUserVisibility(Party $party)
+    public function toggleUserVisibility(Party $party): EventResource
     {
-        $partyId = $party->id;
-        $userId = Auth::id();
-        $participant = EventParticipant::where("user_id", $userId)->where(
-            "event_id",
-            $partyId
-        );
+
+        $participant = EventParticipant::where(["user_id" => Auth::id(), "event_id" => $party->id])->first();
         $participant->update([
             "is_visible" =>
-                $participant->first()->is_visible == "hidden"
+                $participant->is_visible == "hidden"
                     ? "visible"
                     : "hidden",
         ]);
-        return response()->json([
-            "status" =>
-                $participant->first()->is_visible == "visible"
-                    ? "Visible"
-                    : "Hidden",
-        ]);
+        return new EventResource($party);
     }
 
     /**
      * Define if Event Participants will be visible or not
      *
      * @param Party $party
-     * @return JsonResponse
+     * @return EventResource
      */
     public function toggleParticipantsVisibility(Party $party)
     {
+        error_log($party->id);
         $party->update([
             "is_visible" =>
-                $party->first()->is_visible === "hidden" ? "visible" : "hidden",
+                !$party->is_visible
         ]);
-        return response()->json([
-            "status" =>
-                $party->first()->is_visible === "visible"
-                    ? "Visible"
-                    : "Hidden",
-        ]);
+        return new EventResource($party);
     }
 
     /**
