@@ -47,7 +47,7 @@ class EventResource extends JsonResource
                 "participants" =>
                     $this->is_visible || Auth::id() == $this->user_id
                         ? collect(
-                        UserResource::collection(
+                        [...UserResource::collection(
                             $this->participants->filter(
                                 function ($e) {
                                     $e["is_visible"] = $e->pivot->is_visible;
@@ -57,13 +57,13 @@ class EventResource extends JsonResource
                                     return $e->pivot->is_visible == "visible";
                                 }
                             )
-                        )
+                        )]
                     )
                         : collect([]),
                 "first_participants" =>
                     $this->is_visible || Auth::id() == $this->user_id
                         ? collect(
-                        UserResource::collection(
+                        [...UserResource::collection(
                             $this->first_participants->filter(
                                 function ($e) {
                                     $e["is_visible"] = $e->pivot->is_visible;
@@ -72,7 +72,7 @@ class EventResource extends JsonResource
                                     return $e->pivot->is_visible == "visible";
                                 }
                             )
-                        )
+                        )]
                     )
                         : collect([]),
                 "participants_count" => $this->participants_count,
