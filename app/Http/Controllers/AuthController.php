@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Kreait\Firebase\Exception\FirebaseException;
 use Laravel\Sanctum\PersonalAccessToken;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
@@ -65,6 +66,7 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
+            "pseudo" => "required|string",
             "email" => "required|string|email|max:255|unique:users",
             "password" => "required|string|min:6",
         ]);
@@ -76,7 +78,12 @@ class AuthController extends Controller
         }
         $input = $request->all();
         $input["password"] = Hash::make($input["password"]);
-        $user = User::create([...$input, "organizer_commission" => null]);
+        $user = User::create([
+            "pseudo" => $input["pseudo"],
+            "email" => $input["email"],
+            "password" => $input["password"],
+            "organizer_commission" => null,
+        ]);
         $token = $user->createToken(Str::random(32));
         $user->loadCount("events");
         return response()->json(
@@ -91,12 +98,21 @@ class AuthController extends Controller
         );
     }
 
+    /**
+     * @throws FirebaseException
+     */
     public function login(
-        LoginRequest        $request,
+        LoginRequest $request,
         FirebaseAuthService $firebaseAuthService
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $user = $firebaseAuthService->getOrCreateUser($request->firebase_token);
+        error_log($request->phone_number);
+        if ($user == null) {
+            return response()->json(
+                "you_cant_register_with_social_network",
+                422
+            );
+        }
         $token = $user->createToken(Str::random(14));
         $user->phone_number = $user->phone_number ?? $request->phone_number;
         $user->save();
@@ -119,8 +135,13 @@ class AuthController extends Controller
             "follows:id",
             "followers:id"
         );
-        $user->loadCount("unreadNotifications", "followers", "follows");
-        $user->loadCount("events");
+        $user->loadCount(
+            "unreadNotifications",
+            "followers",
+            "follows",
+            "events"
+        );
+        //        $user->loadCount("events");
         return response()->json(new UserResource($user));
     }
 
@@ -141,7 +162,8 @@ class AuthController extends Controller
      */
     public function logout(?Request $request): JsonResponse
     {
-        Auth::user()
+        $request
+            ->user()
             ->currentAccessToken()
             ->delete();
         return response()->json([
@@ -163,7 +185,6 @@ class AuthController extends Controller
         $token = $profileRequest->has("fcm_token")
             ? $profileRequest->fcm_token
             : $user->fcm_token;
-
         // C'est un user qui avait commencé l'inscription avec le numéro de telephone il n'a pas terminé
         if ($profileRequest->has("phone_number")) {
             $badUser = User::where(
@@ -185,27 +206,29 @@ class AuthController extends Controller
                 ->first();
             optional($badUser)->delete();
         }
-        //        Log::info("update : ".json_encode($profileRequest->all()));
+        //                Log::info("update : ".json_encode($profileRequest->all()));
+        Log::info($user);
         $user->update([
             "firstname" => $profileRequest->firstname ?? $user->firstname,
             "lastname" => $profileRequest->lastname ?? $user->lastname,
             "pseudo" => $profileRequest->pseudo ?? $user->pseudo,
             "show_pseudo_only" =>
-                    $profileRequest->show_pseudo_only ?? $user->show_pseudo_only,
+                $profileRequest->show_pseudo_only ?? $user->show_pseudo_only,
             "gender" => $profileRequest->gender ?? $user->gender,
             "birth_date" =>
-                    $profileRequest->date("birth_date") ?? $user->birth_date,
+                $profileRequest->date("birth_date") ?? $user->birth_date,
             "description" => $profileRequest->description ?? $user->description,
             "fcm_token" => $token,
             "last_location" => $location ?? $user->last_location,
             "address" => $profileRequest->address ?? $user->address,
             "phone_number" =>
-                    $profileRequest->phone_number ?? $user->phone_number,
+                $profileRequest->phone_number ?? $user->phone_number,
             "email" => $profileRequest->email ?? $user->email,
             "lang" => $profileRequest->lang ?? $user->lang,
             "preferred_radius" =>
-                    $profileRequest->preferred_radius ?? $user->preferred_radius,
+                $profileRequest->preferred_radius ?? $user->preferred_radius,
         ]);
+        $user->loadCount("events");
 
         if (
             $profileRequest->hasFile("avatar") &&
@@ -214,7 +237,6 @@ class AuthController extends Controller
             $user->save();
             $user->addMediaFromRequest("avatar")->toMediaCollection("avatar");
         }
-
         return response()->json($user);
     }
 

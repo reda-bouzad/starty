@@ -52,9 +52,10 @@ Route::post("/update-profile", [
     "updateProfile",
 ])->middleware("auth:sanctum");
 
-Route::post("/logout", [AuthController::class, "logout"])->middleware(
+Route::post("logout", [AuthController::class, "logout"])->middleware(
     "auth:sanctum"
 );
+
 Route::delete("/account/delete", [
     AuthController::class,
     "deleteAccount",

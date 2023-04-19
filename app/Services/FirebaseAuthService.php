@@ -5,12 +5,17 @@ namespace App\Services;
 use App\Models\User;
 use Kreait\Firebase\Auth;
 use Kreait\Firebase\Auth\UserInfo;
+use Kreait\Firebase\Exception\AuthException;
+use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 
 class FirebaseAuthService
 {
 
-    public function getOrCreateUser(string $firebase_token): User
+    /**
+     * @throws FirebaseException
+     */
+    public function getOrCreateUser(string $firebase_token): User|null
     {
         /** @var Auth $auth */
         $auth = app('firebase.auth');
@@ -18,6 +23,9 @@ class FirebaseAuthService
         $uid = $verifiedIdToken->claims()->get('sub');
 
         $data = $auth->getUser($uid);
+        if (!User::where("firebase_uuid", $uid)->exists() && $data->phoneNumber == null) {
+            return null;
+        }
 
         $unique = [];
         $params = [

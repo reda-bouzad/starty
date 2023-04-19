@@ -58,8 +58,8 @@ class AppConfig extends Resource
                 ->default(fn() => config('starty.revolut_pk')),
             Number::make('commission per organizer (en %)', 'commission')->step('any')->max(100)->min(0),
             Number::make('commission per attendee (en %)', 'commission_attendee')->step('any')->max(100)->min(0),
-            Number::make('Android build', 'android_build'),
-            Number::make('IOS build', 'ios_build'),
+           // Number::make('Android build', 'android_build'),
+           // Number::make('IOS build', 'ios_build'),
             Images::make('Sliders', 'sliders')
         ];
     }
