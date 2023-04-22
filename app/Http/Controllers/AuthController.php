@@ -157,14 +157,14 @@ class AuthController extends Controller
     /**
      * Logout from Starty App
      *
-     * @param Request|null $request
+     * @param Request $request
      * @return JsonResponse
      */
-    public function logout(?Request $request): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
         $request
             ->user()
-            ->currentAccessToken()
+            ->tokens()
             ->delete();
         return response()->json([
             "message" => "Log out",
