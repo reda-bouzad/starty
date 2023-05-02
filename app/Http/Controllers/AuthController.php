@@ -9,8 +9,11 @@ use App\Mail\SendCodeMail;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
 use App\Services\FirebaseAuthService;
+use DB;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,19 +38,36 @@ class AuthController extends Controller
      * Login With Email and Password
      *
      * @param Request $request
-     * @return JsonResponse
+     * @return Application|ResponseFactory|JsonResponse|\Illuminate\Http\Response
      * @throws AuthenticationException
      */
-    public function signIn(Request $request): JsonResponse
+    public function signIn(Request $request)
     {
-        $this->validate($request, [
-            "email" => "required|email",
-            "password" => "required|string|min:6",
-        ]);
-        if (!auth()->attempt($request->only("email", "password"))) {
-            throw new AuthenticationException();
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "email" => "required|email|string",
+                "password" => "required|string|min:6",
+            ],
+            [
+                "email.required" => "email_required",
+                "email.string" => "email_not_string",
+                "email.email" => "email_invalid",
+                "password.required" => "password_required",
+                "password.string" => "password_not_string",
+                "password.min" => "password_min",
+            ]
+        );
+        if ($validator->fails()) {
+            foreach ($validator->errors()->getMessages() as $error) {
+                $errorMessage = implode($error);
+                return response($errorMessage, Response::HTTP_BAD_REQUEST);
+            }
         }
-        $user = auth()->user();
+        $user = User::where("email", $request->email)->first();
+        if (!$user || Hash::check($request->password, $user->password)) {
+            return response("incorrect_user", Response::HTTP_UNAUTHORIZED);
+        }
         $token = $user->createToken(Str::random(32));
         $user->loadCount("events");
         return response()->json([
@@ -58,30 +78,42 @@ class AuthController extends Controller
     }
 
     /**
-     * Register User
-     *
      * @param Request $request
-     * @return JsonResponse
+     * @return Application|ResponseFactory|JsonResponse|\Illuminate\Http\Response
      */
-    public function register(Request $request): JsonResponse
+    public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            "pseudo" => "required|string",
-            "email" => "required|string|email|max:255|unique:users",
-            "password" => "required|string|min:6",
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "pseudo" => "required|string",
+                "email" => "required|string|email|max:255|unique:users,email",
+                "password" => "required|string|min:6",
+            ],
+            [
+                "pseudo.required" => "pseudo_required",
+                "pseudo.string" => "pseudo_not_string",
+                "email.required" => "email_required",
+                "email.string" => "email_not_string",
+                "email.email" => "email_invalid",
+                "email.max" => "email_max",
+                "email.unique" => "email_unique",
+                "password.required" => "password_required",
+                "password.string" => "password_not_string",
+                "password.min" => "password_min",
+            ]
+        );
         if ($validator->fails()) {
-            return response()->json(
-                $validator->errors()->toJson(),
-                Response::HTTP_BAD_REQUEST
-            );
+            foreach ($validator->errors()->getMessages() as $error) {
+                $errorMessage = implode($error);
+                return response($errorMessage, Response::HTTP_BAD_REQUEST);
+            }
         }
         $input = $request->all();
-        $input["password"] = Hash::make($input["password"]);
         $user = User::create([
             "pseudo" => $input["pseudo"],
             "email" => $input["email"],
-            "password" => $input["password"],
+            "password" => Hash::make($input["password"]),
             "organizer_commission" => null,
         ]);
         $token = $user->createToken(Str::random(32));
