@@ -9,9 +9,7 @@ use App\Mail\SendCodeMail;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
 use App\Services\FirebaseAuthService;
-use DB;
 use Exception;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +23,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Kreait\Firebase\Exception\FirebaseException;
-use Laravel\Sanctum\PersonalAccessToken;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
@@ -39,7 +36,6 @@ class AuthController extends Controller
      *
      * @param Request $request
      * @return Application|ResponseFactory|JsonResponse|\Illuminate\Http\Response
-     * @throws AuthenticationException
      */
     public function signIn(Request $request)
     {
@@ -64,10 +60,10 @@ class AuthController extends Controller
                 return response($errorMessage, Response::HTTP_BAD_REQUEST);
             }
         }
-        $user = User::where("email", $request->email)->first();
-        if (!$user || Hash::check($request->password, $user->password)) {
+        if (!auth()->attempt($request->only("email", "password"))) {
             return response("incorrect_user", Response::HTTP_UNAUTHORIZED);
         }
+        $user = auth()->user();
         $token = $user->createToken(Str::random(32));
         $user->loadCount("events");
         return response()->json([
@@ -78,6 +74,8 @@ class AuthController extends Controller
     }
 
     /**
+     * Register User
+     *
      * @param Request $request
      * @return Application|ResponseFactory|JsonResponse|\Illuminate\Http\Response
      */

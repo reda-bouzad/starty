@@ -33,11 +33,15 @@ class ChatController extends Controller
         $room = $request->with;
         $room[] = Auth::id();
         $chat = null;
-        if ($request->input('type', 'single') === "single") {
-            $chat = Chat::whereType($request->input('type', 'single'))
-                ->whereHas('members', function ($query) use ($room) {
-                    $query->whereIn('users.id', $room);
-                }, count($room))
+        if ($request->input("type", "single") === "single") {
+            $chat = Chat::whereType($request->input("type", "single"))
+                ->whereHas(
+                    "members",
+                    function ($query) use ($room) {
+                        $query->whereIn("users.id", $room);
+                    },
+                    count($room)
+                )
                 ->first();
         }
         $ids = [];
@@ -45,29 +49,34 @@ class ChatController extends Controller
             if ($id_user === Auth::id()) {
                 $state = "direct";
             } else {
-                $state = Follow::where('user_id', Auth::id())->where('follower_id', $id_user)->exists() ? "direct" : "request";
+                $state = Follow::where("user_id", Auth::id())
+                    ->where("follower_id", $id_user)
+                    ->exists()
+                    ? "direct"
+                    : "request";
             }
-            $ids[$id_user] = ['state' => $state];
+            $ids[$id_user] = ["state" => $state];
         }
         if (!$chat) {
-
             $chat = Chat::create([
                 "created_by" => Auth::id(),
-                "type" => $request->input('type', 'single'),
-                "name" => $request->input('name'),
+                "type" => $request->input("type", "single"),
+                "name" => $request->input("name"),
             ]);
             $chat->members()->sync($ids);
-
-
         }
-        SendGroupCreateEventJob::dispatch($chat, collect($room)->filter(fn($el) => $el !== Auth::id()));
-        return new ChatResource($chat->load('members'));
+        SendGroupCreateEventJob::dispatch(
+            $chat,
+            collect($room)->filter(fn($el) => $el !== Auth::id())
+        );
+        return new ChatResource($chat->load("members"));
     }
 
-    public function createMessage(MessageRequest $request, Chat $chat): ChatMessageResource
-    {
-
-        $content = $request->input('content', "");
+    public function createMessage(
+        MessageRequest $request,
+        Chat $chat
+    ): ChatMessageResource {
+        $content = $request->input("content", "");
         $from_message = null;
         if ($request->from_message_id !== null) {
             $from_message = ChatMessage::findOrFail($request->from_message_id);
@@ -78,41 +87,51 @@ class ChatController extends Controller
             "receiver" => $chat->type === "group" ? 0 : $request->to,
             "content" => $content,
             "chat_id" => $chat->id,
-            "response_to" => $request->response_to
+            "response_to" => $request->response_to,
         ]);
-        ChatUser::updateOrCreate([
-            "user_id" => Auth::id(),
-            "chat_id" => $chat->id,
-        ], [
-            "state" => "direct"
-        ]);
+        ChatUser::updateOrCreate(
+            [
+                "user_id" => Auth::id(),
+                "chat_id" => $chat->id,
+            ],
+            [
+                "state" => "direct",
+            ]
+        );
 
         if ($chat->type === "single") {
             $to = User::find($request->to);
-            $to->deleted_chats = array_filter($to->deleted_chats ?? [], fn($el) => $el !== $chat->id);
+            $to->deleted_chats = array_filter(
+                $to->deleted_chats ?? [],
+                fn($el) => $el !== $chat->id
+            );
             $to->save();
         }
 
-        $from_message?->getMedia('files')
-            ->each(/**
+        $from_message?->getMedia("files")->each(
+            /**
              * @throws FileIsTooBig
              * @throws FileDoesNotExist
-             */ fn($el) => $message->addMediaFromStream($el->stream())
+             */ fn($el) => $message
+                ->addMediaFromStream($el->stream())
                 ->usingFileName(Str::uuid() . "." . $el->extension)
-                ->toMediaCollection('files'));
-        if ($request->hasFile('files')) {
-            $message->addMultipleMediaFromRequest(['files'])
+                ->toMediaCollection("files")
+        );
+        if ($request->hasFile("files")) {
+            $message
+                ->addMultipleMediaFromRequest(["files"])
                 ->each(function ($fileAdder) {
-                    $fileAdder->toMediaCollection('files');
+                    $fileAdder->toMediaCollection("files");
                 });
         }
 
         DispatchToGroup::dispatch($chat, Auth::user());
         event(new MessageSent($message));
 
-        $otherMembers = $chat->members()
-            ->where('users.id', '!=', Auth::id())
-            ->get(['users.id']);
+        $otherMembers = $chat
+            ->members()
+            ->where("users.id", "!=", Auth::id())
+            ->get(["users.id"]);
         Notification::send($otherMembers, new NewMessageNotification($message));
 
         return new ChatMessageResource($message);
@@ -125,73 +144,94 @@ class ChatController extends Controller
 
         $chats = Chat::query()
             ->with([
-                'lastMessage',
-                'event:id,label,chat_id',
-                'members' => function ($query) {
-                    $query->select('users.id', 'firstname', 'lastname')
-                        ->where('users.id', '!=', Auth::id());
-                }
+                "lastMessage",
+                "event:id,label,chat_id",
+                "members" => function ($query) {
+                    $query
+                        ->select("users.id", "firstname", "lastname")
+                        ->where("users.id", "!=", Auth::id());
+                },
             ])
-            ->withCount('members')
-            ->whereHas('members', function ($query) {
-                $query->where('users.id', Auth::id());
+            ->withCount("members")
+            ->whereHas("members", function ($query) {
+                $query->where("users.id", Auth::id());
             })
             ->where(function (Builder $query) {
-                $query->where(fn($query) => $query->where('type', 'single')->has('messages'))
-                    ->orWhere('type', 'group');
+                $query
+                    ->where(
+                        fn($query) => $query
+                            ->where("type", "single")
+                            ->has("messages")
+                    )
+                    ->orWhere("type", "group");
             })
-            ->whereNotIn('id', \Auth::user()->archive_chats ?? [])
+            ->whereNotIn("id", \Auth::user()->archive_chats ?? [])
             ->when($q, function ($query) use ($q) {
                 $query
-                    ->where(fn($query) => $query->where('type', 'group')->where('name', 'like', "%$q%"))
+                    ->where(
+                        fn($query) => $query
+                            ->where("type", "group")
+                            ->where("name", "like", "%$q%")
+                    )
                     ->orWhere(function ($query) use ($q) {
                         $query
-                            ->where('type', 'single')
-                            ->whereHas('members', function ($query) use ($q) {
+                            ->where("type", "single")
+                            ->whereHas("members", function ($query) use ($q) {
                                 $query
-                                    ->where('users.id', '!=', Auth::id())
-                                    ->where(fn($query) => $query->where('lastname', 'like', "%$q%")->orWhere('firstname', 'like', "%$q%"));
+                                    ->where("users.id", "!=", Auth::id())
+                                    ->where(
+                                        fn($query) => $query
+                                            ->where("lastname", "like", "%$q%")
+                                            ->orWhere(
+                                                "firstname",
+                                                "like",
+                                                "%$q%"
+                                            )
+                                    );
                             });
                     });
             })
             ->when($type, function ($query) use ($type) {
                 if ($type === "direct") {
-
-                    $query->whereHas('directMembers', function ($query) {
-                        $query->where('users.id', Auth::id());
+                    $query->whereHas("directMembers", function ($query) {
+                        $query->where("users.id", Auth::id());
                     });
-                } else if ($type === "request") {
-                    $query->whereHas('requestMembers', function ($query) {
-                        $query->where('users.id', Auth::id());
+                } elseif ($type === "request") {
+                    $query->whereHas("requestMembers", function ($query) {
+                        $query->where("users.id", Auth::id());
                     });
                 }
             })
             ->latest()
-            ->paginate($request->input('per_page'));
+            ->paginate($request->input("per_page"));
         return ChatResource::collection($chats);
     }
 
-    public function getChatMessages(Request $request, Chat $chat): AnonymousResourceCollection
-    {
-
+    public function getChatMessages(
+        Request $request,
+        Chat $chat
+    ): AnonymousResourceCollection {
         return ChatMessageResource::collection(
-            ChatMessage::with('responseToMessage:id,content,sender')
-                ->where('chat_id', $chat->id)
+            ChatMessage::with("responseToMessage:id,content,sender")
+                ->where("chat_id", $chat->id)
                 ->latest()
-                ->paginate($request->input('per_page', 20))
+                ->paginate($request->input("per_page", 20))
         );
     }
 
-    public function getLastMessagesAfterId(Request $request): AnonymousResourceCollection
-    {
+    public function getLastMessagesAfterId(
+        Request $request
+    ): AnonymousResourceCollection {
         return ChatMessageResource::collection(
-            ChatMessage::when($request->last_id, function ($query) use ($request) {
-                $query->where('id', '>', $request->last_id);
-            }
-            )->latest()->get());
-
+            ChatMessage::when($request->last_id, function ($query) use (
+                $request
+            ) {
+                $query->where("id", ">", $request->last_id);
+            })
+                ->latest()
+                ->get()
+        );
     }
-
 
     public function markAsRead(ChatMessage $message)
     {
@@ -203,10 +243,11 @@ class ChatController extends Controller
 
     public function markChatAsRead(Chat $chat)
     {
-        $chat->messages()->where('receiver', Auth::id())
-            ->where('read', false)
-            ->update(['read' => true]);
-
+        $chat
+            ->messages()
+            ->where("receiver", Auth::id())
+            ->where("read", false)
+            ->update(["read" => true]);
     }
 
     /**
@@ -216,14 +257,13 @@ class ChatController extends Controller
     {
         if ($chat->isGroup()) {
             $this->validate($request, [
-                "list" => "required|array"
+                "list" => "required|array",
             ]);
-            $users = User::whereIn('id', $request->list)
-                ->whereJsonDoesntContain('deleted_chats', $chat->id)
-                ->get(['id'])->map->id;
+            $users = User::whereIn("id", $request->list)
+                ->whereJsonDoesntContain("deleted_chats", $chat->id)
+                ->get(["id"])->map->id;
             $chat->members()->attach($users);
         }
-
     }
 
     /**
@@ -232,7 +272,7 @@ class ChatController extends Controller
     public function removeToGroup(Request $request, Chat $chat)
     {
         $this->validate($request, [
-            "list" => "required|array"
+            "list" => "required|array",
         ]);
         $chat->members()->detach($request->list);
     }
@@ -245,10 +285,10 @@ class ChatController extends Controller
     public function addImageToGroup(Request $request, Chat $chat): ChatResource
     {
         $this->validate($request, [
-            "avatar" => "required|image"
+            "avatar" => "required|image",
         ]);
 
-        $chat->addMediaFromRequest('avatar')->toMediaCollection('avatar');
+        $chat->addMediaFromRequest("avatar")->toMediaCollection("avatar");
         return new ChatResource($chat);
     }
 
@@ -259,8 +299,16 @@ class ChatController extends Controller
         if (Auth::id() === $chat->created_by) {
             $chat->delete();
         } else {
-            $user->deleted_chats = array_merge($user->deleted_chats ?? [], [$chat->id]);
-            $user->deleted_messages = array_merge($user->deleted_messages ?? [], $chat->messages()->get(['id'])->map->id->toArray());
+            $user->deleted_chats = array_merge($user->deleted_chats ?? [], [
+                $chat->id,
+            ]);
+            $user->deleted_messages = array_merge(
+                $user->deleted_messages ?? [],
+                $chat
+                    ->messages()
+                    ->get(["id"])
+                    ->map->id->toArray()
+            );
             $chat->members()->detach($user->id);
             $user->save();
         }
@@ -270,10 +318,13 @@ class ChatController extends Controller
     {
         $user = Auth::user();
 
-        if ($request->boolean('for_all') && $message->sender === Auth::id()) {
+        if ($request->boolean("for_all") && $message->sender === Auth::id()) {
             $message->delete();
         } else {
-            $user->deleted_messages = array_merge($user->deleted_messages ?? [], [$message->id]);
+            $user->deleted_messages = array_merge(
+                $user->deleted_messages ?? [],
+                [$message->id]
+            );
             $user->save();
         }
     }
@@ -284,23 +335,31 @@ class ChatController extends Controller
     public function updateName(Request $request, Chat $chat)
     {
         $this->validate($request, [
-            "name" => "required|string"
+            "name" => "required|string",
         ]);
         $chat->name = $request->name;
         $chat->save();
     }
 
-    public function getChatMembers(Request $request, Chat $chat): AnonymousResourceCollection
-    {
+    public function getChatMembers(
+        Request $request,
+        Chat $chat
+    ): AnonymousResourceCollection {
         return UserResource::collection(
             $chat->members()->paginate($request->input("per_page", 30))
         );
     }
 
-    public function archiveChat(Chat $chat)
+    public function archiveChat(int $chatId)
     {
+        $chat = Chat::where(["id" => $chatId]);
+        if (!$chat->exists()) {
+            return response()->json([]);
+        }
         $user = Auth::user();
-        $user->archive_chats = array_merge($user->archive_chats ?? [], [$chat->id]);
+        $user->archive_chats = array_merge($user->archive_chats ?? [], [
+            $chat->id,
+        ]);
         $user->save();
     }
 
@@ -309,30 +368,34 @@ class ChatController extends Controller
         $user = Auth::user();
 
         if ($user->archive_chats) {
-            $user->archive_chats = array_filter($user->archive_chats, fn($val) => $val !== $chat);
+            $user->archive_chats = array_filter(
+                $user->archive_chats,
+                fn($val) => $val !== $chat
+            );
         }
         $user->save();
     }
 
     public function archiveList(): AnonymousResourceCollection
     {
-        $chats = Chat::withoutGlobalScope('archive')->with([
-            'lastMessage',
-            'event:id,label,chat_id',
-            'members' => function ($query) {
-                $query->select('users.id', 'firstname', 'lastname')
-                    ->where('users.id', '!=', Auth::id());
-            }
-        ])
-            ->withCount('members')
-            ->whereHas('members', function ($query) {
-                $query->where('users.id', Auth::id());
+        $chats = Chat::withoutGlobalScope("archive")
+            ->with([
+                "lastMessage",
+                "event:id,label,chat_id",
+                "members" => function ($query) {
+                    $query
+                        ->select("users.id", "firstname", "lastname")
+                        ->where("users.id", "!=", Auth::id());
+                },
+            ])
+            ->withCount("members")
+            ->whereHas("members", function ($query) {
+                $query->where("users.id", Auth::id());
             })
-            ->whereIn('id', Auth::user()->archive_chats ?? [])
+            ->whereIn("id", Auth::user()->archive_chats ?? [])
             ->latest()
             ->get();
 
         return ChatResource::collection($chats);
     }
-
 }
