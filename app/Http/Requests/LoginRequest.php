@@ -5,6 +5,10 @@ namespace App\Http\Requests;
 use App\Rules\VerifyTelNumberRule;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property string|null $firebase_token
+ * @property string|null $phone_number
+ */
 class LoginRequest extends FormRequest
 {
     /**
@@ -25,14 +29,8 @@ class LoginRequest extends FormRequest
     public function rules()
     {
         return [
-            "firebase_token" => [
-                "required",
-                new VerifyTelNumberRule(true)
-            ],
-            "phone_number" => [
-                "sometimes",
-                new VerifyTelNumberRule()
-            ]
+            "firebase_token" => ["required", new VerifyTelNumberRule(true)],
+            "phone_number" => ["sometimes", new VerifyTelNumberRule()],
         ];
     }
 }

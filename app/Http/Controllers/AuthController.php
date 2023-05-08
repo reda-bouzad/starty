@@ -129,6 +129,9 @@ class AuthController extends Controller
     }
 
     /**
+     * @param LoginRequest $request
+     * @param FirebaseAuthService $firebaseAuthService
+     * @return JsonResponse
      * @throws FirebaseException
      */
     public function login(
@@ -192,7 +195,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $request
+        auth()
             ->user()
             ->tokens()
             ->delete();
