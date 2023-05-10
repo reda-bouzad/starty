@@ -4,7 +4,6 @@ use App\Http\Controllers\AppConfigController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\EventController;
-use App\Http\Controllers\EventParticipantController;
 use App\Http\Controllers\FollowerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;

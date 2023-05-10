@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Kreait\Firebase\Exception\AuthException;
 use Kreait\Firebase\Exception\FirebaseException;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Spatie\MediaLibrary\MediaCollections\Exceptions\FileDoesNotExist;
@@ -77,10 +78,15 @@ class AuthController extends Controller
      * Register User
      *
      * @param Request $request
+     * @param FirebaseAuthService $firebaseAuthService
      * @return Application|ResponseFactory|JsonResponse|\Illuminate\Http\Response
+     * @throws FirebaseException
+     * @throws AuthException
      */
-    public function register(Request $request)
-    {
+    public function register(
+        Request $request,
+        FirebaseAuthService $firebaseAuthService
+    ) {
         $validator = Validator::make(
             $request->all(),
             [
@@ -106,6 +112,9 @@ class AuthController extends Controller
                 $errorMessage = implode($error);
                 return response($errorMessage, Response::HTTP_BAD_REQUEST);
             }
+        }
+        if ($firebaseAuthService->verifyEmail($request->email)) {
+            return response("email_unique", Response::HTTP_BAD_REQUEST);
         }
         $input = $request->all();
         $user = User::create([
