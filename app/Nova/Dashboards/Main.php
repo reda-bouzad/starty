@@ -2,8 +2,10 @@
 
 namespace App\Nova\Dashboards;
 
+use App\Nova\Metrics\EventPerDay;
 use App\Nova\Metrics\EventTrend;
 use App\Nova\Metrics\UserCount;
+use App\Nova\Metrics\UserPerRole;
 use Laravel\Nova\Dashboards\Main as Dashboard;
 
 class Main extends Dashboard
@@ -23,7 +25,9 @@ class Main extends Dashboard
     {
         return [
             new UserCount(),
-            new EventTrend()
+            new EventTrend(),
+            new EventPerDay(),
+            new UserPerRole()
         ];
     }
 }

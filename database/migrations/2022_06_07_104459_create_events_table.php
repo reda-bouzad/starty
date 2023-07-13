@@ -15,8 +15,6 @@ return new class extends Migration
     {
         Schema::create('events', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')
-                ->onDelete('cascade');
             $table->string('label');
             $table->integer('nb_participants');
             $table->enum('type', ['public', 'private'])->default('public');

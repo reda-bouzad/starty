@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Laravel\Nova\Nova;
 use MatanYadaev\EloquentSpatial\Objects\Geometry;
@@ -132,9 +133,11 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 class Party extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $table = "events";
+    protected $fillable = ['user_id'];
+
     protected $appends = ["thumb", "first_image", "first_participants"];
     protected $with = ["media"];
 
@@ -232,7 +235,7 @@ class Party extends Model implements HasMedia
 
     public function user()
     {
-        return $this->belongsTo(User::class, "user_id")
+        return $this-> belongsTo(User::class, "user_id")
             ->select([
                 "id",
                 "firstname",

@@ -44,7 +44,9 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
         Nova::mainMenu(function (Request $request) {
             return [
-                MenuSection::dashboard(Main::class)->icon('home'),
+                MenuSection::dashboard(Main::class)->icon('home')
+                ->withBadge('New', 'success')
+                ,
 
                 MenuSection::make('Utilisateurs', [
                     MenuItem::resource(Administrator::class),
@@ -53,8 +55,8 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
 
                 MenuSection::make('Evènements', [
                     MenuItem::resource(Event::class)
-                ])
-                    ->icon('event')->collapsable(),
+                ])->icon('tag')->collapsable(),
+
                 MenuSection::make('Signalements', [
                     MenuItem::resource(Report::class),
                     MenuItem::resource(UserReport::class),
@@ -65,7 +67,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(  Organizer::class),
 
 
-                ])->icon('settings')->collapsable(),
+                ])->icon('briefcase')->collapsable(),
             ];
         });
     }

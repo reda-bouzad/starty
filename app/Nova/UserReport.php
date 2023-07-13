@@ -21,6 +21,7 @@ class UserReport extends Resource
      */
     public static $model = \App\Models\ModelReport::class;
 
+
     public static function indexQuery(NovaRequest $request, $query)
     {
         return parent::indexQuery($request, $query->where('model_type', \App\Models\User::class));
@@ -28,7 +29,7 @@ class UserReport extends Resource
 
     public static function label()
     {
-        return "Utilisateur";
+        return "Utilisateur Report";
     }
 
     /**

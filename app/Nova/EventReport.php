@@ -28,7 +28,7 @@ class EventReport extends Resource
 
     public static function label()
     {
-        return "Evenement";
+        return "Evenement Report";
     }
 
     /**

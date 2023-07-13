@@ -22,10 +22,10 @@ return new class extends Migration
 
          Schema::create('model_report', function (Blueprint $table) {
            $table->bigIncrements('id');
-           $table->unsignedBigInteger('model_id');
-           $table->unsignedBigInteger('report_id');
-           $table->unsignedInteger('user_id');
-           $table->string('model_type');
+           $table->unsignedBigInteger('model_id')->default(0);
+           $table->unsignedBigInteger('report_id')->default(0);
+           $table->unsignedBigInteger('user_id')->default(0);
+           $table->string('model_type')->default('');
         });
     }
 

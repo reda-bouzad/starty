@@ -4,7 +4,7 @@ namespace App\Observers;
 
 use App\Models\Chat;
 use App\Models\Party;
-use Laravel\Nova\Nova;
+use Laravel\Nova\Notifications\NovaNotification;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class EventObserver
@@ -33,6 +33,7 @@ class EventObserver
             $chat->addMediaFromUrl($event->getFirstMediaUrl('first_image'));
         }
         $chat->members()->attach($event->user_id, ["state" => "direct"]);
+//        $this->getNovaNotification($event,'Nouveau Evenement: ', 'success');
 
     }
 
@@ -47,6 +48,8 @@ class EventObserver
         $event->lat = optional($event->location)->latitude;
         $event->long = optional($event->location)->longitude;
         $event->saveQuietly();
+//        $this->getNovaNotification($event,'Update Evenement: ', 'success');
+
     }
 
     /**
@@ -57,7 +60,7 @@ class EventObserver
      */
     public function deleted(Party $event)
     {
-        //
+//        $this->getNovaNotification($event,'Deleted Evenement: ', 'error');
     }
 
     /**
@@ -68,7 +71,7 @@ class EventObserver
      */
     public function restored(Party $event)
     {
-        //
+//        $this->getNovaNotification($event,'Restored Evenement: ', 'success');
     }
 
     /**
@@ -79,6 +82,12 @@ class EventObserver
      */
     public function forceDeleted(Party $event)
     {
-        //
+//        $this->getNovaNotification($event,'Force Deleted Evenement: ', 'error');
+    }
+    public function getNovaNotification($event, $message, $type):void{
+        foreach (Party::all()as $p){
+            $p-> notify(NovaNotification::make()->message($message.' '.$p->label.' '.$p->price)
+                ->icon('chart-bar')->type($type));
+        }
     }
 }

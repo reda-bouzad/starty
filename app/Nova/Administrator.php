@@ -31,7 +31,7 @@ class Administrator extends Resource
         return "Administrateurs";
     }
 
-
+    public static $clickAction = 'preview';
 
     /**
      * The columns that should be searched.
@@ -39,7 +39,7 @@ class Administrator extends Resource
      * @var array
      */
     public static $search = [
-        'id',
+        'firstname','id','username'
     ];
 
     /**
@@ -53,27 +53,41 @@ class Administrator extends Resource
         return [
             ID::make()->sortable(),
 
-            Images::make('Avatar'),
+            Images::make('Avatar')
+                ->showOnPreview()
+                ->textAlign('left')
+            ,
 
             Text::make('Prénom', 'firstname')
                 ->sortable()
-                ->rules('max:255'),
+                ->rules('max:255')
+                ->textAlign('left')
+                ->placeholder('Entrer le prénom')
+                ->showOnPreview(),
 
             Text::make('Nom', 'lastname')
                 ->sortable()
-                ->rules('max:255'),
+                ->rules('max:255')
+                ->textAlign('left')
+                ->placeholder('Entrer le nom')
+                ->showOnPreview(),
 
             Text::make('Email')
                 ->sortable()
                 ->rules('required', 'email', 'max:254')
                 ->creationRules('unique:users,email')
-                ->updateRules('unique:users,email,{{resourceId}}'),
+                ->updateRules('unique:users,email,{{resourceId}}')
+                ->placeholder("Entrer l'email")
+                ->textAlign('left')
+                ->showOnPreview(),
 
-            Hidden::make('user_type')->default('administrator'),
+            Hidden::make('user_type')->default('administrator')
+                ->showOnPreview(),
 
             Password::make('Password')
                 ->onlyOnForms()
                 ->creationRules('required', 'string', 'min:8')
+                ->placeholder('Entrer le mot de passe')
                 ->updateRules('nullable', 'string', 'min:8'),
         ];
     }

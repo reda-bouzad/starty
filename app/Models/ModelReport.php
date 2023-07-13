@@ -34,6 +34,7 @@ class ModelReport extends Pivot
     use HasFactory;
 
     public $timestamps = false;
+    public $incrementing = true;
     protected $guarded = [];
 
     public function reportable()

@@ -33,7 +33,7 @@ class Event extends Resource
 
     /**
      * The single value that should be used to represent the resource when being displayed.
-     *
+ *
      * @var string
      */
     public static $title = 'label';
@@ -65,8 +65,6 @@ class Event extends Resource
             Heading::make('<p class="text-danger">* Tous les champs sont requis.</p>')->asHtml(),
             ID::make()->sortable(),
 
-            BelongsTo::make('Utilisateur', 'user', User::class)->searchable(),
-
             Text::make('Libellé', 'label'),
 
             Select::make('Type')->options(array('public' => 'Public', 'private' => 'Privé'))->nullable(),
@@ -93,6 +91,7 @@ class Event extends Resource
             Text::make('longitude', 'long')->rules(['required', 'numeric', 'between:-180,180'])
                 ->default(fn() => optional($this->location)->longitude),
             Images::make('QrCode ticket', 'qr_code')->readonly(),
+            BelongsTo::make('Utilisateur', 'user', User::class)->searchable(),
             BelongsToMany::make('Participants', 'participants', User::class),
             BelongsToMany::make('Signalement', 'reports', Report::class)
 

@@ -8,6 +8,7 @@ use App\Nova\Actions\VerifyIdentityAction;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Ebess\AdvancedNovaMediaLibrary\Fields\Media;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Markdown;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Laravel\Nova\Fields\Boolean;
@@ -64,7 +65,11 @@ class User extends Resource
      * @var array
      */
     public static $search = [
-        'id', 'firstname', 'lastname', 'email', 'phone_number'
+        "id",
+        "firstname",
+        "lastname",
+        "show_pseudo_only",
+        "pseudo",
     ];
 
     /**
@@ -83,28 +88,37 @@ class User extends Resource
 
             Text::make('Prenom', 'firstname')
                 ->sortable()
+                ->textAlign('left')
                 ->rules('max:255'),
 
             Text::make('Nom', 'lastname')
                 ->sortable()
+                ->textAlign('left')
                 ->rules('max:255'),
 
             Text::make('Email')
                 ->sortable()
+                ->textAlign('left')
                 ->rules('required', 'email', 'max:254', Rule::unique('users', 'email')->ignore($this->id)),
 
 
             Text::make('Téléphone', 'phone_number')
+                ->textAlign('left')
                 ->sortable()
                 ->rules('max:255'),
 
             Select::make('Sexe', 'gender')->options(array('M' => 'Masculin', 'F' => 'Feminin'))
+                ->textAlign('left')
                 ->nullable(),
 
             Date::make('Date de naissance', 'birth_date')
+                ->textAlign('left')
                 ->nullable(),
 
-            Textarea::make('Description')->nullable(),
+            \Laravel\Nova\Fields\Markdown::make('Description')
+                ->placeholder('Description')
+                ->textAlign('left')
+                ->nullable(),
             JSON::make('Dernière position', 'last_location', [
                 Text::make('latitude')->rules(['nullable', 'numeric', 'between:-90,90'])
                     ->displayUsing(fn($request, $model, $attribute) => optional($model->last_location)->latitude),

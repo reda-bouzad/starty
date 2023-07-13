@@ -60,7 +60,7 @@ class EventController extends Controller
         }
         $data = $eventRequest->except(["lat", "long"]);
         $data = array_merge($data, [
-            "user_id" => Auth::id(),
+            "user_id" => Auth::user()->id ,
             "location" => new Point($eventRequest->lat, $eventRequest->long),
             "remaining_participants" => $eventRequest->nb_participants,
         ]);

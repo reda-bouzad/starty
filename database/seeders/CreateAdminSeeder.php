@@ -36,5 +36,16 @@ class CreateAdminSeeder extends Seeder
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ]);
+        User::create([
+            'firstname' => 'tutu',
+            'lastname' => 'tutu',
+            'email' => 'tutu@star.com',
+            'user_type' => 'customer',
+            'is_verified' => 1,
+            'phone_number' => '+212677966160',
+            'password' => bcrypt('123456789'),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
     }
 }
